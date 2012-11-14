@@ -1,0 +1,7 @@
+# Compiled binaries
+*.o
+
+# Temporary files
+*.*~
+*.swp
+*.swo
