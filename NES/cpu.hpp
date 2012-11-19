@@ -1,8 +1,8 @@
 //implementation of 6502
-#include <stdin.h>
+#include <stdint.h>
 
 enum StatusFlag= { 	CARRY = 0x01,
-			ZER0 = 0x02,
+			ZERO = 0x02,
 			INTERRUPT = 0x04,
 			DECIMAL_MODE = 0x08,
 			BRK = 0x10, 
@@ -24,16 +24,6 @@ class CPU {
 		bool getFlag(StatusFlag sflag);
 		void setFlag(StatusFlag sflag, bool value);
 		//do we even need these
-		uint8_t getA();
-		uint8_t getX();
-		uint8_t getY();
-		uint8_t getPC();
-		uint8_t getSP();
-		void setA(uin8_t value);
-		void setX(uin8_t value);
-		void setY(uin8_t value);
-		void setPC(uin8_t value);
-		void setSP(uin8_t value);
 		int32_t getClock();
 		Cycle changeState();
 

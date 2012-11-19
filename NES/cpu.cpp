@@ -1,5 +1,5 @@
 //implementation of 6502
-#include <stdin.h>
+#include <stdint.h>
 #include "cpu.hpp"
 			
 CPU::CPU(uint8_t A,
@@ -25,45 +25,6 @@ void CPU::clearFlag(StatusFlag sflag) {
 
 };
 
-uint8_t CPU::getA() {
- 	return mA;
-}
-
-uint8_t CPU::getX() {
-	return mX;
-}
-
-uint8_t CPU::getY() {
-	return mY;
-}
-
-uint8_t CPU::getPC() {
-	return mPC;
-}
-
-uint8_t CPU::getSP() {
-	return mSP;
-}
-
-void CPU::setA(uin8_t value) {
-	mA = value;
-}
-
-void CPU::setX(uin8_t value) {
-	mX = value;
-}
-	
-void CPU::setY(uin8_t value) {
-	mY = value;
-}
-
-void CPU::setPC(uin8_t value) {
-	mPC = value;
-}
-		
-void CPU::setSP(uin8_t value){
-	mSP = value;
-}
 Cycle CPU:: getClock() {
 	return mClock;
 
@@ -75,7 +36,7 @@ Cycle CPU::changeState() {
 
 	//logic
 
-	mPC++;
+	//mPC++;
 	return cycles;
 }
 
