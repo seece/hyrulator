@@ -1,4 +1,4 @@
 hyrulator
 =========
 
-A NES emulator.
+A NES emulator, possibly in the future.
