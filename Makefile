@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-c -Wall
 LDFLAGS=
 VPATH=src 
-SOURCES=NES/cpu.cpp NES/nes.cpp NES/ppu.cpp
+SOURCES=$(wildcard src/*.cpp) $(wildcard src/NES/*.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=hyrulator
 
