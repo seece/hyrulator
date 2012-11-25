@@ -3,6 +3,11 @@
 #include <iostream>
 #include "cpu.hpp"
 			
+CPU::CPU() {
+	mClock = 0;
+	mReg = (Registers){0, 0, 0, 0, 0, 0}; // ISO C++ forbids this :(
+}
+
 CPU::CPU(Registers reg, int32_t clock) :
 	mReg(reg), mClock(clock) { }
 
