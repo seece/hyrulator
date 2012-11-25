@@ -5,8 +5,6 @@
 const uint32_t ram_size= 2048;
 
 class Memory {
-	
-
 
 	public:
 		Memory(); // placeholder, should take arguments

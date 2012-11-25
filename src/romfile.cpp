@@ -1,8 +1,8 @@
 
 #include <stdint.h>
 #include <iostream>
-#include "ppu.hpp"
+#include "romfile.hpp"
 
-PPU::PPU() {
+RomFile::RomFile() {
 
 }
