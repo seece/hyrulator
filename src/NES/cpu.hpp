@@ -1,5 +1,6 @@
 //implementation of 6502
 #include <stdint.h>
+#include "memory.hpp"
 
 enum StatusFlag { 	CARRY = 0x01,
 			ZERO = 0x02,

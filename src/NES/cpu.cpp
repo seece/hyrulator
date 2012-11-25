@@ -29,9 +29,9 @@ Cycle CPU::getClock() {
 
 Cycle CPU::changeState() {
 	Cycle cycles = 0;
-	uint8_t opcode = mMem.get(mReg.PC);
-	uint8_t operand1 = mMem.get(mReg.PC + 1);
-	uint8_t operand2 = mMem.get(mReg.PC + 2);
+	uint8_t opcode = mMem.read(mReg.PC);
+	uint8_t operand1 = mMem.read(mReg.PC + 1);
+	uint8_t operand2 = mMem.read(mReg.PC + 2);
 	int32_t instruction_length = 0;
 	Registers old_reg = mReg;
 	//logic
@@ -49,7 +49,7 @@ Cycle CPU::changeState() {
 		//zero page: adc oper
 		//2 bytes & 3 cycles
 		case 0x65:
-			mReg.A += mMem.get(operand1) + getFlag(CARRY);
+			mReg.A += mMem.read(operand1) + getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 3;
@@ -58,7 +58,7 @@ Cycle CPU::changeState() {
 		//zero page,X: adc oper,X
 		//2 bytes & 4 cycles
 		case 0x75:
-			mReg.A += mMem.get(operand1 + mReg.X) + getFlag(CARRY);
+			mReg.A += mMem.read(operand1 + mReg.X) +getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4;
@@ -67,7 +67,7 @@ Cycle CPU::changeState() {
 		//Absolute: adc oper
 		//3 bytes & 4 cycles
 		case 0x60:
-			mReg.A += mMem.get(operand1 + operand2*0x100) + getFlag(CARRY);
+			mReg.A += mMem.read(operand1 + operand2*0x100) +getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4;
@@ -76,7 +76,7 @@ Cycle CPU::changeState() {
 		//Absolute,X: adc oper,X
 		//3 bytes & 4(+1 if page boundary exceeded) cycles
 		case 0x70:
-			mReg.A += mMem.get(operand1 + operand2*0x100 + mReg.X) + getFlag(CARRY);
+			mReg.A += mMem.read(operand1 + operand2*0x100 + mReg.X) + getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4 + (operand1 + mReg.X) > 0xff;
@@ -85,7 +85,7 @@ Cycle CPU::changeState() {
 		//Absolute,Y: adc oper,Y
 		//3 bytes & 4(+1 if page boundary exceeded) cycles
 		case 0x79:
-			mReg.A += mMem.get(operand1 + operand2*0x100 + mReg.Y) + getFlag(CARRY);
+			mReg.A += mMem.read(operand1 + operand2*0x100 + mReg.Y) + getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4 + (operand1 + mReg.Y) > 0xff;
@@ -94,7 +94,7 @@ Cycle CPU::changeState() {
 		//(Indirect,X): adc (oper,X)
 		//2 bytes & 6 cycles 
 		case 0x61:
-			mReg.A += mMem.get(mMem.get(operand1 + mReg.X)) + getFlag(CARRY);
+			mReg.A += mMem.read(mMem.read(operand1 + mReg.X)) + getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 6;
@@ -103,10 +103,10 @@ Cycle CPU::changeState() {
 		//(Indirect),X: adc (oper),X
 		//2 bytes & 5 cycles
 		case 0x71:
-			mReg.A += mMem.get(mMem.get(operand1) + mReg.X) + getFlag(CARRY);
+			mReg.A += mMem.read(mMem.read(operand1) + mReg.X) + getFlag(CARRY);
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
-			cycles = 5 + (mMem.get(operand1) + mReg.X) > 0xff;
+			cycles = 5 + (mMem.read(operand1) + mReg.X) > 0xff;
 			instruction_length = 2;
 		break;
 		default:
