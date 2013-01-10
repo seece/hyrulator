@@ -6,3 +6,6 @@ hyrulator
 *.*~
 *.swp
 *.swo
+
+# test files
+/rom
