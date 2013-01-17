@@ -14,3 +14,10 @@ int32_t Emulator::run() {
 
 	return 0;
 }
+
+// Loads a rom to the emulator memory.
+// returns 0 on success
+int32_t Emulator::loadRom(char * filepath) {
+	
+	return 0;
+}
