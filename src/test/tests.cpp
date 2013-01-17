@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 #include <iostream>
-#include "main.hpp"
-#include "emulator.hpp"
+#include "../main.hpp"
+#include "../emulator.hpp"
 
 int main(int argc, char *argv[]) {
 
