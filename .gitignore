@@ -1,6 +1,7 @@
 # Compiled binaries
 *.o
 hyrulator
+tests
 *.exe
 
 # Temporary files
