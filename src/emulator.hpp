@@ -8,6 +8,7 @@ class Emulator {
 		Emulator();
 
 		static RomFile loadRom(char * filepath);
+		static void freeRom(RomFile* romp);
 		int32_t run(void);
 	private:
 		NES m_Nes;

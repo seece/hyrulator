@@ -15,4 +15,7 @@ struct RomFile {
 		bool fourScreenLayout;
 		bool vsSystem;			// ???
 		bool NTSC;				// false = PAL
+
+		char * romData;
+		char * vromData;
 };

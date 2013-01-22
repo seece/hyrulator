@@ -6,6 +6,7 @@
 #include <ios>
 #include "emulator.hpp"
 #include "romfile.hpp"
+#include "nintendo.h"
 
 Emulator::Emulator() {
 	std::cout << "Emulator booting up." 
@@ -31,6 +32,11 @@ void readFlags(RomFile * romp, uint8_t flags1, uint8_t flags2) {
 	uint8_t mapper = (flags1 & 0x0F) | ((flags2 & 0x0F)<<4);
 	romp->mapper = (int32_t) mapper;
 
+}
+
+void Emulator::freeRom(RomFile* romp) {
+	delete romp->romData;	
+	delete romp->vromData;	
 }
 
 // Loads a rom to the emulator memory.
@@ -106,6 +112,12 @@ RomFile Emulator::loadRom(char * filepath) {
 
 	// skip zeros
 	input.seekg(6, std::ios::cur);
+	rom.romData = new char[BANKSIZE * rom.numRomBanks];
+	rom.vromData = new char[BANKSIZE * rom.numVRomBanks];
+
+	input.read((char *)rom.romData, BANKSIZE * rom.numRomBanks);
+	input.read((char *)rom.vromData, BANKSIZE * rom.numVRomBanks);
+
 	input.close();
 
 	return rom;

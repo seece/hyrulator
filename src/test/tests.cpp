@@ -13,5 +13,7 @@ int main(int argc, char *argv[]) {
 	Emulator emu;
 	RomFile rom = emu.loadRom(rompath);
 
+	emu.freeRom(&rom);
+
 	return 0;
 }
