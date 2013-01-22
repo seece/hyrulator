@@ -4,19 +4,15 @@
 
 #include <stdint.h>
 
-class RomFile {
-	public:
-		RomFile(const char * filepath);
-
-		uint32_t numRomBanks;	// PRG-ROM pages
-		uint32_t numVRomBanks;	// CHR-ROM pages
-		uint32_t numRamBanks;	// 8KB RAM pages 
-		uint32_t mapper;
-		bool horizontalMirror;
-		bool verticalMirror;
+struct RomFile {
+		int32_t numRomBanks;	// PRG-ROM pages
+		int32_t numVRomBanks;	// CHR-ROM pages
+		int32_t numRamBanks;	// 8KB RAM pages 
+		int32_t mapper;
+		bool mirrorDirection;	// 0 horiz, 1 vertical
 		bool SRAMEnabled;
 		bool trainerPresent;
 		bool fourScreenLayout;
+		bool vsSystem;			// ???
 		bool NTSC;				// false = PAL
-	private:
 };

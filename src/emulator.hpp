@@ -1,4 +1,4 @@
-	#pragma once
+#pragma once
 
 #include <stdint.h>
 #include "NES/nes.hpp"
@@ -6,8 +6,9 @@
 class Emulator {
 	public:
 		Emulator();
-		int32_t run();
-		int32_t loadRom(char * filepath);
+
+		static RomFile loadRom(char * filepath);
+		int32_t run(void);
 	private:
-		NES mNes;
+		NES m_Nes;
 };
