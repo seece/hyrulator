@@ -5,7 +5,7 @@
 			
 CPU::CPU() {
 	mClock = 0;
-	mReg = (Registers){0, 0, 0, 0, 0, 0}; // ISO C++ forbids this :(
+	mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
 }
 
 CPU::CPU(Registers reg, int32_t clock) :
@@ -25,7 +25,7 @@ void CPU::setFlag(StatusFlag sflag, bool value) {
 }
 
 void CPU::clearFlag(StatusFlag sflag) {
-	mReg.S = mReg.S & ~sflag;
+	mReg.S = mReg.S & (0xff ^ sflag);
 }
 
 Cycle CPU::getClock() {
@@ -37,7 +37,6 @@ Cycle CPU::changeState() {
 	uint8_t opcode = mMem.read(mReg.PC);
 	uint8_t operand1 = mMem.read(mReg.PC + 1);
 	uint8_t operand2 = mMem.read(mReg.PC + 2);
-	int32_t instruction_length = 0;
 	Registers old_reg = mReg;
 	//logic
 	switch(opcode) {
@@ -49,7 +48,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 2;
-			instruction_length = 2;
+			mReg.PC += 2;
 		break;
 		//zero page: adc oper
 		//2 bytes & 3 cycles
@@ -58,7 +57,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 3;
-			instruction_length = 2;
+			mReg.PC += 2;
 		break;
 		//zero page,X: adc oper,X
 		//2 bytes & 4 cycles
@@ -67,7 +66,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4;
-			instruction_length = 2;
+			mReg.PC += 2;
 		break;
 		//Absolute: adc oper
 		//3 bytes & 4 cycles
@@ -76,7 +75,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4;
-			instruction_length = 3;
+			mReg.PC += 3;
 		break;
 		//Absolute,X: adc oper,X
 		//3 bytes & 4(+1 if page boundary exceeded) cycles
@@ -85,7 +84,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4 + (operand1 + mReg.X) > 0xff;
-			instruction_length = 3;
+			mReg.PC += 3;
 		break;
 		//Absolute,Y: adc oper,Y
 		//3 bytes & 4(+1 if page boundary exceeded) cycles
@@ -94,7 +93,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 4 + (operand1 + mReg.Y) > 0xff;
-			instruction_length = 3;
+			mReg.PC += 3;
 		break;
 		//(Indirect,X): adc (oper,X)
 		//2 bytes & 6 cycles 
@@ -103,7 +102,7 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 6;
-			instruction_length = 2;
+			mReg.PC += 2;
 		break;
 		//(Indirect),X: adc (oper),X
 		//2 bytes & 5 cycles
@@ -112,16 +111,15 @@ Cycle CPU::changeState() {
 			setFlag(static_cast<StatusFlag>(CARRY|OVERFLOW), mReg.A < old_reg.A);
 			setFlag(static_cast<StatusFlag>(ZERO), !mReg.A);
 			cycles = 5 + (mMem.read(operand1) + mReg.X) > 0xff;
-			instruction_length = 2;
+			mReg.PC += 2;
 		break;
 		default:
 			std::cout << static_cast<int32_t>(opcode)
 			 	<< " is not a legal opcode."
 				<< " PC will be incremented by one byte"
 				<< std::endl;
-			instruction_length = 1;
+			mReg.PC += 1;
 	}
 	
-	mReg.PC += instruction_length;
 	return cycles;
 }

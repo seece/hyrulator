@@ -12,6 +12,10 @@ enum StatusFlag { 	CARRY = 0x01,
 			SIGN= 0x80 };
 
 struct Registers {
+	Registers() : A(0), X(0), Y(0), S(0), PC(0), SP(0) { }
+	Registers(uint8_t a, uint8_t x,   uint8_t y, 
+		  uint8_t s, uint16_t pc, uint8_t sp)
+		: A(a), X(x), Y(y), S(s), PC(pc), SP(sp) { }
 	uint8_t A;
 	uint8_t X;
 	uint8_t Y;
