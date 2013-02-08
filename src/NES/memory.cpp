@@ -9,7 +9,12 @@ Memory::Memory() {
 	memset(mRam, 0, ram_size);
 }
 
-uint8_t Memory::read(uint32_t offset) {
+uint8_t Memory::readb(uint32_t offset) {
+	// TODO add here some mapper processing
+	return mRam[offset];
+}
+
+uint16_t Memory::readw(uint32_t offset) {
 	// TODO add here some mapper processing
 	return mRam[offset];
 }
