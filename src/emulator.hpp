@@ -11,5 +11,5 @@ class Emulator {
 		static void freeRom(RomFile* romp);
 		int32_t run(void);
 	private:
-		NES m_Nes;
+		NES * m_pNes; // TODO figure this out later
 };

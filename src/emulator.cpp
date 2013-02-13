@@ -11,6 +11,7 @@
 Emulator::Emulator() {
 	std::cout << "Emulator booting up." 
 		<< std::endl;
+	// TODO add NES class initialization here
 }
 
 int32_t Emulator::run() {

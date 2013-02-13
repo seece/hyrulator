@@ -3,9 +3,10 @@
 #include <iostream>
 #include "cpu.hpp"
 			
-CPU::CPU() {
+CPU::CPU(const RomFile &rom) {
 	mClock = 0;
 	mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
+	mMem = Memory(rom);
 }
 
 CPU::CPU(Registers reg, int32_t clock) :

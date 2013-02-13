@@ -7,11 +7,9 @@
 
 class NES {
 	public:
-		NES();
-		void loadROM(RomFile rom);
+		NES(const RomFile &rom);
 		void restart();
 		
-
 	private:
 		CPU cpu;
 		PPU ppu;

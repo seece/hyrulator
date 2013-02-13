@@ -13,6 +13,8 @@ int main(int argc, char *argv[]) {
 	Emulator emu;
 	RomFile rom = emu.loadRom(rompath);
 
+	NES nes(rom);
+
 	emu.freeRom(&rom);
 
 	return 0;
