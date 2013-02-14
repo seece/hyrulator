@@ -35,6 +35,7 @@ class CPU {
 		bool getFlag(StatusFlag sflag);
 		void setFlag(StatusFlag sflag, bool value = 1);
 		void clearFlag(StatusFlag sflag);
+		void resetInterrupt(void);
 		//do we even need these
 		Cycle getClock();
 		Cycle changeState();

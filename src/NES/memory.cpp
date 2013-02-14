@@ -6,6 +6,11 @@
 #include "memory.hpp"
 #include "../romfile.hpp"
 
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::hex;
+
 Memory::Memory() {
 	rom = NULL;
 }
@@ -53,9 +58,14 @@ uint8_t Memory::readb(uint32_t offset) {
 }
 
 uint16_t Memory::readw(uint32_t offset) {
-	// TODO add here some mapper processing
-	fprintf(stderr, "readw not yet supported, tried to read from 0x%x\n", offset);
-	return mRam[offset];
+	// TODO add mapper here
+	// TODO put proper read logic here since now the two bytes can be fetched from totally different places
+	char word[2];
+	word[0] = readb(offset);
+	word[1] = readb(offset+1);
+
+	cout << "Read a word from " << hex << offset << endl;
+	return static_cast<uint16_t>(word[1] | (word[0] << 8));
 }
 
 void Memory::write(uint32_t offset, uint8_t value) {
@@ -86,9 +96,9 @@ MemoryArea getAreaFromOffset(uint32_t offset) {
 		return MEM_WORKRAM;
 	} else if (offset < 0x1800) {
 		return MEM_WORKRAM; // mirrored
-	} else if (offset > 0x2000 && offset <0x4000) {
+	} else if (offset >= 0x2000 && offset <0x4000) {
 		return MEM_PPUCONTROL;
-	} else if (offset > 0x4020 && offset < (0xC000+0x4000)) {
+	} else if (offset >= 0x4018 && offset < (0xC000+0x4000)) {
 		return MEM_MAPPER;
 	}
 

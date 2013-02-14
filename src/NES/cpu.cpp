@@ -34,6 +34,8 @@ Cycle CPU::getClock() {
 }
 
 Cycle CPU::changeState() {
+	std::cout << "0x" << std::hex << mReg.PC << ":\t";
+
 	Cycle cycles = 0;
 	int8_t opcode = mMem.readb(mReg.PC);
 	int8_t operand1 = mMem.readb(mReg.PC + 1);
@@ -43,7 +45,7 @@ Cycle CPU::changeState() {
     #define STATUS(X) static_cast<StatusFlag>(X)
 	switch(opcode) {
 		//ADC - Add With Carry
-		//immidiate: adc #oper
+		//immediate: adc #oper
 		//2 bytes & 2 cycles
 		case 0x69:
 			mReg.A += operand1 + getFlag(CARRY);
@@ -189,4 +191,10 @@ Cycle CPU::changeState() {
 	}
 	
 	return cycles;
+}
+
+void CPU::resetInterrupt(void) {
+	// read the reset interrupt vector
+	mReg.PC = mMem.readw(0xFFFC); 
+	std::cout << "Reset interrupt vector: " << std::hex << mReg.PC << std::endl;
 }

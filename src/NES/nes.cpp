@@ -7,6 +7,7 @@
 
 NES::NES(const RomFile* rom) {
 	cpu = CPU(rom);
+	cpu.resetInterrupt();
 
 }
 
