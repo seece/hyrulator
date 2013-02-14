@@ -15,6 +15,9 @@ int main(int argc, char *argv[]) {
 	RomFile rom = loadRom(rompath);
 
 	NES nes(&rom);
+	for (int32_t i=0;i<10;i++) {
+		int32_t cycle = nes.runCycle();
+	}
 
 	freeRom(&rom);
 

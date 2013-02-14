@@ -7,12 +7,23 @@
 #include "../romfile.hpp"
 
 Memory::Memory() {
+	rom = NULL;
 }
 
 Memory::Memory(const RomFile* newrom) {
 	// in the NES the memory is not zeroed and this might mask some bugs
 	memset(mRam, 0, ram_size);
 	rom = newrom;	
+}
+
+uint8_t Memory::mapMemory(uint32_t offset) {
+	if (offset >= 0x8000) {
+		// zero mapper in action
+		uint32_t prg_offset = offset - 0x8000;
+		return rom->romData[prg_offset];
+	}
+
+	return 0;
 }
 
 uint8_t Memory::readb(uint32_t offset) {
@@ -30,7 +41,8 @@ uint8_t Memory::readb(uint32_t offset) {
 			break;
 		case MEM_MAPPER:
 			fprintf(stdout, "Mapper memory read from 0x%x\n", offset);
-			// TODO add here mapper processing
+			return mapMemory(offset);
+
 			break;
 		default:
 			fprintf(stderr, "Memory area error (read) at 0x%x\n", offset);
@@ -61,7 +73,6 @@ void Memory::write(uint32_t offset, uint8_t value) {
 			break;
 		case MEM_MAPPER:
 			fprintf(stdout, "Mapper memory write from 0x%x\n", offset);
-			// TODO add here mapper processing
 			break;
 		default:
 			fprintf(stderr, "Memory area error (write) at 0x%x\n", offset);

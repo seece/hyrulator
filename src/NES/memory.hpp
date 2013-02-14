@@ -15,6 +15,7 @@ class Memory {
 		uint16_t readw(uint32_t offset);
 		void write(uint32_t offset, uint8_t value);
 	private:
+		uint8_t mapMemory(uint32_t offset);
 		// includes zero page, stack and RAM
 		uint8_t mRam[ram_size];
 		const RomFile* rom;

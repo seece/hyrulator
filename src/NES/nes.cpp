@@ -14,3 +14,7 @@ void NES::restart() {
 
 }
 
+int32_t NES::runCycle(void) {
+	cpu.changeState();
+	return cpu.getClock();
+}

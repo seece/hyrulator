@@ -1,4 +1,5 @@
 //implementation of 6502
+#pragma once
 #include <stdint.h>
 #include "memory.hpp"
 
