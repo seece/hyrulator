@@ -11,6 +11,7 @@ class NES {
 		NES(const RomFile* rom);
 		void restart();
 		int32_t runCycle(void);
+		friend class Debugger;
 		
 	private:
 		CPU cpu;

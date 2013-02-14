@@ -40,6 +40,7 @@ class CPU {
 		Cycle getClock();
 		Cycle changeState();
 
+		friend class Debugger;
 	private:
 		Registers mReg;
 		Cycle mClock;
