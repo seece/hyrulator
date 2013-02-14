@@ -29,7 +29,7 @@ typedef int32_t Cycle;
 class CPU {
 	public:
 		CPU() {};
-		CPU(const RomFile &rom);
+		CPU(const RomFile* rom);
 		CPU(Registers reg, Cycle clock);
 		bool getFlag(StatusFlag sflag);
 		void setFlag(StatusFlag sflag, bool value = 1);

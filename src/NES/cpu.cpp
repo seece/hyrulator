@@ -3,7 +3,7 @@
 #include <iostream>
 #include "cpu.hpp"
 			
-CPU::CPU(const RomFile &rom) {
+CPU::CPU(const RomFile* rom) {
 	mClock = 0;
 	mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
 	mMem = Memory(rom);

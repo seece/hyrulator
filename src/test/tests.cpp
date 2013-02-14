@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	Emulator emu;
 	RomFile rom = loadRom(rompath);
 
-	NES nes(rom);
+	NES nes(&rom);
 
 	freeRom(&rom);
 

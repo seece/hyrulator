@@ -1,4 +1,4 @@
-//NES
+	//NES
 #pragma once
 #include "cpu.hpp"
 #include "memory.hpp"
@@ -7,7 +7,7 @@
 
 class NES {
 	public:
-		NES(const RomFile &rom);
+		NES(const RomFile* rom);
 		void restart();
 		
 	private:

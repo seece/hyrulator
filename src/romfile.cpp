@@ -72,8 +72,8 @@ void freeRom(RomFile* romp) {
 	fprintf(stdout, "Mapper: %d\n", rom.mapper);
 	fprintf(stdout, "Flags: 0x%04X %04X\n", flags1, flags2);
 
-	if (rom.mapper != 0x01) {
-		fprintf(stderr, "Invalid mapper! (Only MMC3 is supported)\n");
+	if (rom.mapper != 0x01 && rom.mapper != 0x00) {
+		fprintf(stderr, "Invalid mapper 0x%X! (Only MMC3 & zero mapper are supported)\n", rom.mapper);
 	}
 
 	input.read((char *) &numRamBanks, 1);

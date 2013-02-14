@@ -9,10 +9,10 @@
 Memory::Memory() {
 }
 
-Memory::Memory(const RomFile& newrom) {
+Memory::Memory(const RomFile* newrom) {
 	// in the NES the memory is not zeroed and this might mask some bugs
 	memset(mRam, 0, ram_size);
-	//rom = &newrom;	
+	rom = newrom;	
 }
 
 uint8_t Memory::readb(uint32_t offset) {

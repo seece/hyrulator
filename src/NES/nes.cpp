@@ -5,7 +5,8 @@
 #include <iostream>
 #include "nes.hpp"
 
-NES::NES(const RomFile &rom) {
+NES::NES(const RomFile* rom) {
+	cpu = CPU(rom);
 
 }
 
