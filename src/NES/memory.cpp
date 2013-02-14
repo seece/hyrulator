@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <cstdio>
 #include <cstring>
 #include "memory.hpp"
 #include "../romfile.hpp"
@@ -15,18 +16,57 @@ Memory::Memory(const RomFile& newrom) {
 }
 
 uint8_t Memory::readb(uint32_t offset) {
-	// TODO add here some mapper processing
-	return mRam[offset];
+	MemoryArea area = getAreaFromOffset(offset);
+	switch (area) {
+		case MEM_UNKNOWN:
+			// don't write to unknown positions
+			fprintf(stdout, "Memory read from MEM_UNKNOWN at 0x%x\n", offset);
+			break;
+		case MEM_WORKRAM:
+			return mRam[offset];
+			break;
+		case MEM_PPUCONTROL:
+			fprintf(stdout, "PPU Control read requested from 0x%x\n", offset);
+			break;
+		case MEM_MAPPER:
+			fprintf(stdout, "Mapper memory read from 0x%x\n", offset);
+			// TODO add here mapper processing
+			break;
+		default:
+			fprintf(stderr, "Memory area error (read) at 0x%x\n", offset);
+			break;
+	}
+
+	return 0;
 }
 
 uint16_t Memory::readw(uint32_t offset) {
 	// TODO add here some mapper processing
+	fprintf(stderr, "readw not yet supported, tried to read from 0x%x\n", offset);
 	return mRam[offset];
 }
 
 void Memory::write(uint32_t offset, uint8_t value) {
-	// TODO add here some mapper processing too
-	mRam[offset] = value;
+	MemoryArea area = getAreaFromOffset(offset);
+	switch (area) {
+		case MEM_UNKNOWN:
+			// don't write to unknown positions
+			fprintf(stdout, "Memory write to MEM_UNKNOWN at 0x%x\n", offset);
+			break;
+		case MEM_WORKRAM:
+			mRam[offset] = value;
+			break;
+		case MEM_PPUCONTROL:
+			fprintf(stdout, "PPU Control write requested from 0x%x\n", offset);
+			break;
+		case MEM_MAPPER:
+			fprintf(stdout, "Mapper memory write from 0x%x\n", offset);
+			// TODO add here mapper processing
+			break;
+		default:
+			fprintf(stderr, "Memory area error (write) at 0x%x\n", offset);
+			break;
+	}
 }
 
 // based on http://en.wikibooks.org/wiki/NES_Programming/Memory_Map

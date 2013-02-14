@@ -20,3 +20,4 @@ class Memory {
 		//RomFile * rom;
 };
 
+MemoryArea getAreaFromOffset(uint32_t offset);
