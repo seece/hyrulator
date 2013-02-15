@@ -10,13 +10,17 @@ class Memory {
 
 	public:
 		Memory() ;  
-		Memory(const RomFile &rom); 
+		Memory(const RomFile* rom); 
 		uint8_t readb(uint32_t offset);
 		uint16_t readw(uint32_t offset);
 		void write(uint32_t offset, uint8_t value);
+
+		friend class Debugger;
 	private:
+		uint8_t mapMemory(uint32_t offset);
 		// includes zero page, stack and RAM
 		uint8_t mRam[ram_size];
-		//RomFile * rom;
+		const RomFile* rom;
 };
 
+MemoryArea getAreaFromOffset(uint32_t offset);

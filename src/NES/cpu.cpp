@@ -3,7 +3,7 @@
 #include <iostream>
 #include "cpu.hpp"
 			
-CPU::CPU(const RomFile &rom) {
+CPU::CPU(const RomFile* rom) {
 	mClock = 0;
 	mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
 	mMem = Memory(rom);
@@ -34,6 +34,8 @@ Cycle CPU::getClock() {
 }
 
 Cycle CPU::changeState() {
+	std::cout << "0x" << std::hex << mReg.PC << ":\t";
+
 	Cycle mLastInstructionCycles = 0;
     //TODO Exception handling
 	uint8_t opcode = mMem.readb(mReg.PC);
@@ -253,4 +255,10 @@ void CPU::andPreIndexedIndirect(uint8_t operand1) {
     setFlag(STATUS(SIGN), mReg.A & 0x80); 
     mLastInstructionCycles = 5 + (mMem.readb(operand1) + mReg.X) > 0xff;
     mReg.PC += 2;
+}
+
+void CPU::resetInterrupt(void) {
+	// read the reset interrupt vector
+	mReg.PC = mMem.readw(0xFFFC); 
+	std::cout << "Reset interrupt vector: " << std::hex << mReg.PC << std::endl;
 }

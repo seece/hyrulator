@@ -1,4 +1,5 @@
 //implementation of 6502
+#pragma once
 #include <stdint.h>
 #include "memory.hpp"
 
@@ -29,11 +30,12 @@ typedef int32_t Cycle;
 class CPU {
 	public:
 		CPU() {};
-		CPU(const RomFile &rom);
+		CPU(const RomFile* rom);
 		CPU(Registers reg, Cycle clock);
 		bool getFlag(StatusFlag sflag);
 		void setFlag(StatusFlag sflag, bool value = true);
 		void clearFlag(StatusFlag sflag);
+		void resetInterrupt(void);
 		//do we even need these
 		Cycle getClock();
 		Cycle changeState();
@@ -57,6 +59,7 @@ class CPU {
         void andIndexedIndirect(uint8_t operand1);
         void andPreIndexedIndirect(uint8_t operand1);
 
+		friend class Debugger;
 	private:
 		Registers mReg;
 		Cycle mClock;

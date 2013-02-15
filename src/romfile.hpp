@@ -19,3 +19,6 @@ struct RomFile {
 		char * romData;
 		char * vromData;
 };
+
+RomFile loadRom(char * filepath);
+void freeRom(RomFile* romp);
