@@ -32,15 +32,35 @@ class CPU {
 		CPU(const RomFile &rom);
 		CPU(Registers reg, Cycle clock);
 		bool getFlag(StatusFlag sflag);
-		void setFlag(StatusFlag sflag, bool value = 1);
+		void setFlag(StatusFlag sflag, bool value = true);
 		void clearFlag(StatusFlag sflag);
 		//do we even need these
 		Cycle getClock();
 		Cycle changeState();
+        //Processor commands
+        //adc
+        void adcImmediate(uint8_t operand1);
+        void adcZeroPage(uint8_t operand1);
+        void adcZeroPageX(uint8_t operand1);
+        void adcAbsolute(uint8_t operand1, uint8_t operand2);
+        void adcAbsoluteX(uint8_t operand1, uint8_t operand2);
+        void adcAbsoluteY(uint8_t operand1, uint8_t operand2);
+        void adcIndexedIndirect(uint8_t operand1);
+        void adcPreIndexedIndirect(uint8_t operand1);
+        //and
+        void andImmediate(uint8_t operand1);
+        void andZeroPage(uint8_t operand1);
+        void andZeroPageX(uint8_t operand1);
+        void andAbsolute(uint8_t operand1, uint8_t operand2);
+        void andAbsoluteX(uint8_t operand1, uint8_t operand2);
+        void andAbsoluteY(uint8_t operand1, uint8_t operand2);
+        void andIndexedIndirect(uint8_t operand1);
+        void andPreIndexedIndirect(uint8_t operand1);
 
 	private:
 		Registers mReg;
 		Cycle mClock;
 		Memory mMem;
+        Cycle mLastInstructionCycles;
 
 };
