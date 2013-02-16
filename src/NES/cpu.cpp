@@ -29,6 +29,11 @@ void CPU::clearFlag(StatusFlag sflag) {
 	mReg.S = mReg.S & (0xff ^ sflag);
 }
 
+void CPU::setOverflow(uint8_t a, uint8_t b, uint8_t sum) {
+    //If a and b don't differ in sign but a and result do.
+    setFlag(OVERFLOW, !((a ^ b) & 0x80) && ((a ^ sum) & 0x80));
+}
+
 Cycle CPU::getClock() {
 	return mClock;
 }
@@ -79,7 +84,7 @@ Cycle CPU::changeState() {
 void CPU::adcImmediate(uint8_t operand1) {
     uint16_t sum = mReg.A + operand1 + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), (mReg.A ^ operand1);
+    setOverflow(mReg.A, operand1, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 2;
@@ -90,9 +95,10 @@ void CPU::adcImmediate(uint8_t operand1) {
 //zero page: adc oper
 //2 bytes & 3 cycles
 void CPU::adcZeroPage(uint8_t operand1) {
-    uint16_t sum = mReg.A + mMem.readb(operand1) + getFlag(CARRY);
+    uint8_t mem_value = mMem.readb(operand1); 
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 3;
@@ -103,9 +109,10 @@ void CPU::adcZeroPage(uint8_t operand1) {
 //zero page,X: adc oper,X
 //2 bytes & 4 cycles
 void CPU::adcZeroPageX(uint8_t operand1){
-    uint16_t sum = mReg.A + mMem.readb(operand1 + mReg.X) +getFlag(CARRY);
+    uint8_t mem_value = mMem.readb(operand1 + mReg.X); 
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 4;
@@ -116,9 +123,10 @@ void CPU::adcZeroPageX(uint8_t operand1){
 //Absolute: adc oper
 //3 bytes & 4 cycles
 void CPU::adcAbsolute(uint8_t operand1, uint8_t operand2) {
-     uint16_t sum = mReg.A + mMem.readb(operand1 + operand2*0x100) + getFlag(CARRY);
+    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100); 
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY|OVERFLOW), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), mReg.A < old_reg.A);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 4;
@@ -129,9 +137,10 @@ void CPU::adcAbsolute(uint8_t operand1, uint8_t operand2) {
 //Absolute,X: adc oper,X
 //3 bytes & 4(+1 if page boundary exceeded) cycles
 void CPU::adcAbsoluteX(uint8_t operand1, uint8_t operand2) {
-    uint16_t sum = mReg.A + mMem.readb(operand1 + operand2*0x100 + mReg.X) + getFlag(CARRY);
+    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100 + mReg.X); 
+    uint16_t sum = mReg.A + mem_value  + getFlag(CARRY);
     setFlag(STATUS(CARRY|OVERFLOW), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 4 + (operand1 + mReg.X) > 0xff;
@@ -142,9 +151,10 @@ void CPU::adcAbsoluteX(uint8_t operand1, uint8_t operand2) {
 //Absolute,Y: adc oper,Y
 //3 bytes & 4(+1 if page boundary exceeded) cycles
 void CPU::adcAbsoluteY(uint8_t operand1, uint8_t operand2) {
-    uint16_t sum = mReg.A + mMem.readb(operand1 + operand2*0x100 + mReg.Y) + getFlag(CARRY);
+    uint8_t mem_value =  mMem.readb(operand1 + operand2*0x100 + mReg.Y);
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 4 + (operand1 + mReg.Y) > 0xff;
@@ -155,9 +165,10 @@ void CPU::adcAbsoluteY(uint8_t operand1, uint8_t operand2) {
 //(Indirect,X): adc (oper,X)
 //2 bytes & 6 cycles 
 void CPU::adcIndexedIndirect(uint8_t operand1) {
-    uint16_t sum = mReg.A + mMem.readb(mMem.readw(operand1 + mReg.X)) + getFlag(CARRY);
+    uint8_t mem_value =  mMem.readb(mMem.readw(operand1 + mReg.X));
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 6;
@@ -168,9 +179,10 @@ void CPU::adcIndexedIndirect(uint8_t operand1) {
 //(Indirect),X: adc (oper),X
 //2 bytes & 5 cycles
 void CPU::adcPreIndexedIndirect(uint8_t operand1) {
-    uint16_t sum = mReg.A + mMem.readb(mMem.readw(operand1) + mReg.X) + getFlag(CARRY);
+    uint8_t mem_value = mMem.readb(mMem.readw(operand1) + mReg.X);
+    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
-    //setFlag(STATUS(OVERFLOW), sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
     mLastInstructionCycles = 5 + (mMem.readb(operand1) + mReg.X) > 0xff;
