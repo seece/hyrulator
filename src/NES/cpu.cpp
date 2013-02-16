@@ -65,6 +65,20 @@ Cycle CPU::changeState() {
         case 0x39: andAbsoluteX(operand1, operand2); break;
         case 0x21: andAbsoluteY(operand1, operand2); break;
         case 0x31: andIndexedIndirect(operand1); break;
+
+        case 0x0A: aslA(); break;
+        case 0x06: aslZeroPage(operand1); break;
+        case 0x16: aslZeroPageX(operand1); break;
+        case 0x0E: aslAbsolute(operand1, operand2); break;
+        case 0x1E: aslAbsoluteX(operand1, operand2); break; 
+
+        case 0x90: branch(operand1, CARRY, false); break;
+        case 0xb0: branch(operand1, CARRY, true); break;
+        case 0xf0: branch(operand1, ZERO, true); break;
+        case 0x30: branch(operand1, SIGN, true); break;
+        case 0xd0: branch(operand1, ZERO, false); break;
+        case 0x10: branch(operand1, SIGN, false); break;
+
 		default:
 			std::cout << static_cast<int32_t>(opcode)
 			 	<< " is not a legal opcode."
@@ -267,6 +281,70 @@ void CPU::andPreIndexedIndirect(uint8_t operand1) {
     setFlag(STATUS(SIGN), mReg.A & 0x80); 
     mLastInstructionCycles = 5 + (mMem.readb(operand1) + mReg.X) > 0xff;
     mReg.PC += 2;
+}
+
+void CPU::aslA() {
+    setFlag(STATUS(CARRY), mReg.A & 0x80);
+    setFlag(STATUS(SIGN), mReg.A & 0x70);
+    mReg.A <<= 1;
+    setFlag(STATUS(ZERO), !mReg.A);
+    mLastInstructionCycles = 2;
+    mReg.PC++;
+}
+
+void CPU::aslZeroPage(uint8_t operand1) {
+    uint8_t mem_value = mMem.readb(operand1);
+    setFlag(CARRY, mem_value & 0x80);
+    setFlag(SIGN, mem_value & 0x70);
+    mem_value <<= 1;
+    setFlag(ZERO, !mem_value);
+    mMem.write(operand1, mem_value); 
+    mLastInstructionCycles = 5;
+    mReg.PC += 2;
+}
+
+void CPU::aslZeroPageX(uint8_t operand1) {
+    uint8_t mem_value = mMem.readb(operand1 + mReg.X); 
+    setFlag(CARRY, mem_value & 0x80);
+    setFlag(SIGN, mem_value & 0x70);
+    mem_value <<= 1;
+    setFlag(ZERO, !mem_value);
+    mMem.write(operand1 + mReg.X, mem_value);
+    mLastInstructionCycles = 6;
+    mReg.PC += 2;
+}
+
+void CPU::aslAbsolute(uint8_t operand1, uint8_t operand2) {
+    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100);
+    setFlag(CARRY, mem_value & 0x80);
+    setFlag(SIGN, mem_value & 0x70);
+    mem_value <<= 1;
+    setFlag(ZERO, !mem_value);
+    mMem.write(operand1 + operand2*0x100, mem_value);
+    mLastInstructionCycles = 6;
+    mReg.PC += 3;
+}
+
+void CPU::aslAbsoluteX(uint8_t operand1, uint8_t operand2) {
+    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100 + mReg.X); 
+    setFlag(CARRY, mem_value & 0x80);
+    setFlag(SIGN, mem_value & 0x70);
+    mem_value <<= 1;
+    setFlag(ZERO, !mem_value);
+    mMem.write(operand1 + operand2*0x100 + mReg.X, mem_value);
+    mLastInstructionCycles = 7;
+    mReg.PC += 2;
+}
+
+void CPU::branch(uint8_t operand1, StatusFlag sflag, bool cond) {
+    if((bool)getFlag(sflag) == cond) {
+        mReg.PC += 2;
+        mLastInstructionCycles = 2;
+    } else {
+        uint8_t address = mReg.PC + (int8_t)operand1;
+        mLastInstructionCycles = 3 + ((address & 0xff00) != (mReg.PC & 0xff00));
+        mReg.PC = address;
+    }
 }
 
 void CPU::resetInterrupt(void) {

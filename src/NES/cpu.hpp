@@ -59,7 +59,15 @@ class CPU {
         void andAbsoluteY(uint8_t operand1, uint8_t operand2);
         void andIndexedIndirect(uint8_t operand1);
         void andPreIndexedIndirect(uint8_t operand1);
-
+        //asl
+        void aslA();
+        void aslZeroPage(uint8_t operand1);
+        void aslZeroPageX(uint8_t operand1);
+        void aslAbsolute(uint8_t operand1, uint8_t operand2);
+        void aslAbsoluteX(uint8_t operand1, uint8_t operand2);
+        //branch: bcs
+        void branch(uint8_t operand1, StatusFlag sflag, bool cond);
+        //bit
 		friend class Debugger;
 	private:
 		Registers mReg;
