@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -g -Wall -pedantic -O2
+CFLAGS=-c -g -Wall -pedantic -O2 -std=c++11
 LDFLAGS=-lstdc++
 VPATH=src 
 SOURCES=$(wildcard *.cpp) $(wildcard NES/*.cpp)
