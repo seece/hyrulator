@@ -1,6 +1,7 @@
 //implementation of 6502
 #pragma once
 #include <stdint.h>
+#include <functional>
 #include "memory.hpp"
 
 enum StatusFlag { 	CARRY = 0x01,
@@ -41,32 +42,11 @@ class CPU {
 		Cycle getClock();
 		Cycle changeState();
         //Processor commands
-        //adc
-        void adcImmediate(uint8_t operand1);
-        void adcZeroPage(uint8_t operand1);
-        void adcZeroPageX(uint8_t operand1);
-        void adcAbsolute(uint8_t operand1, uint8_t operand2);
-        void adcAbsoluteX(uint8_t operand1, uint8_t operand2);
-        void adcAbsoluteY(uint8_t operand1, uint8_t operand2);
-        void adcIndexedIndirect(uint8_t operand1);
-        void adcPreIndexedIndirect(uint8_t operand1);
-        //and
-        void andImmediate(uint8_t operand1);
-        void andZeroPage(uint8_t operand1);
-        void andZeroPageX(uint8_t operand1);
-        void andAbsolute(uint8_t operand1, uint8_t operand2);
-        void andAbsoluteX(uint8_t operand1, uint8_t operand2);
-        void andAbsoluteY(uint8_t operand1, uint8_t operand2);
-        void andIndexedIndirect(uint8_t operand1);
-        void andPreIndexedIndirect(uint8_t operand1);
-        //asl
-        void aslA();
-        void aslZeroPage(uint8_t operand1);
-        void aslZeroPageX(uint8_t operand1);
-        void aslAbsolute(uint8_t operand1, uint8_t operand2);
-        void aslAbsoluteX(uint8_t operand1, uint8_t operand2);
+        void ADC(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment);
+        void AND(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment);
+        void ASL(std::function<uint8_t()> read, std::function<void(uint8_t value)> store, std::function<uint8_t()> cycles, uint8_t increment);
         //branch: bcs
-        void branch(uint8_t operand1, StatusFlag sflag, bool cond);
+        void branch(uint8_t operand1, bool flag);
         //bit
 		friend class Debugger;
 	private:

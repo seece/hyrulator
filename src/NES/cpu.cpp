@@ -2,31 +2,31 @@
 #include <stdint.h>
 #include <iostream>
 #include "cpu.hpp"
-			
+
 CPU::CPU(const RomFile* rom) {
-	mClock = 0;
-	mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
-	mMem = Memory(rom);
+    mClock = 0;
+    mReg = Registers(); // equivalent to Registers(0, 0, 0, 0, 0, 0);
+    mMem = Memory(rom);
 }
 
 CPU::CPU(Registers reg, int32_t clock) :
-	mReg(reg), mClock(clock) { }
+    mReg(reg), mClock(clock) { }
 
 
 bool CPU::getFlag(StatusFlag sflag) {
-	return mReg.S & sflag;
+    return mReg.S & sflag;
 }
 	
 void CPU::setFlag(StatusFlag sflag, bool value) {
-	if(value) {
-		mReg.S = mReg.S | sflag ;
-	} else {
-		clearFlag(sflag);
-	}
+    if(value) {
+        mReg.S = mReg.S | sflag ;
+    } else {
+        clearFlag(sflag);
+    }
 }
 
 void CPU::clearFlag(StatusFlag sflag) {
-	mReg.S = mReg.S & (0xff ^ sflag);
+    mReg.S = mReg.S & (0xff ^ sflag);
 }
 
 void CPU::setOverflow(uint8_t a, uint8_t b, uint8_t sum) {
@@ -35,7 +35,7 @@ void CPU::setOverflow(uint8_t a, uint8_t b, uint8_t sum) {
 }
 
 Cycle CPU::getClock() {
-	return mClock;
+    return mClock;
 }
 
 Cycle CPU::changeState() {
@@ -47,37 +47,71 @@ Cycle CPU::changeState() {
 	uint8_t operand1 = mMem.readb(mReg.PC + 1);
 	uint8_t operand2 = mMem.readb(mReg.PC + 2);
 	//logic
+    auto readA = [&] () { return mReg.A; };
+    auto readImmediate = [&] () { return operand1; };
+    auto readZeroPage = [&] () { return mMem.readb(operand1); };
+    auto readZeroPageX = [&] () { return mMem.readb(operand1 + mReg.X); };
+    auto readAbsolute = [&] () { return mMem.readb(operand1 + operand2*0x100); };
+    auto readAbsoluteX = [&] () { return mMem.readb(operand1 + operand2*0x100 + mReg.X); };
+    auto readAbsoluteY =  [&] () { return mMem.readb(operand1 + operand2*0x100 + mReg.Y); };
+    auto readIndexedIndirect =  [&] () { return mMem.readb(mMem.readw(operand1 + mReg.X)); };
+    auto readPreIndexedIndirect = [&] () { return mMem.readb(mMem.readw(operand1) + mReg.X); };
+
+    //auto storeImmediate = [&] () { operand1; };
+    auto storeA = [&] (const uint8_t& val) { mReg.A = val; };
+    auto storeZeroPage = [&] (const uint8_t& val) { mMem.write(operand1, val); };
+    auto storeZeroPageX = [&] (const uint8_t& val) { mMem.write(operand1 + mReg.X, val); };
+    auto storeAbsolute = [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100, val); };
+    auto storeAbsoluteX = [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100 + mReg.X, val); };
+    auto storeAbsoluteY =  [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100 + mReg.Y, val); };
+    auto storeIndexedIndirect =  [&] (const uint8_t& val) { mMem.write(mMem.readw(operand1 + mReg.X), val); };
+    auto storePreIndexedIndirect = [&] (const uint8_t& val) { mMem.write(mMem.readw(operand1) + mReg.X, val); };
+  
+    //TODO overload instructions so that this unelegancy is reduced 
+    auto cycles1 = [] () { return 1; };
+    auto cycles2 = [] () { return 2; };
+    auto cycles3 = [] () { return 3; };
+    auto cycles4 = [] () { return 4; };
+    auto cycles5 = [] () { return 5; };
+    auto cycles6 = [] () { return 6; };
+    auto cycles7 = [] () { return 7; };
+    auto cyclesAbsoluteX = [&] () { return 4 + ((operand1 + mReg.Y) > 0xff); };
+    auto cyclesAbsoluteY = [&] () { return 4 + ((operand1 + mReg.Y) > 0xff); };
+    auto cyclesPreIndexedIndirect = [&] () { return 5 + ((mMem.readb(operand1) + mReg.Y) > 0xff); };
     #define STATUS(X) static_cast<StatusFlag>(X)
+
 	switch(opcode) {
-		case 0x69: adcImmediate(operand1); break;
-		case 0x65: adcZeroPage(operand1); break;
-		case 0x75: adcZeroPageX(operand1); break;
-        case 0x60: adcAbsolute(operand1, operand2); break;
-		case 0x70: adcAbsoluteX(operand1, operand2); break;
-		case 0x79: adcAbsoluteY(operand1, operand2); break;
-		case 0x61: adcIndexedIndirect(operand1); break;
-		case 0x71: adcPreIndexedIndirect(operand1); break;
+        case 0x69: ADC(readImmediate, cycles2, 2); break;
+        case 0x65: ADC(readZeroPage, cycles3, 2); break;
+        case 0x75: ADC(readZeroPageX, cycles4, 2); break;
+        case 0x60: ADC(readAbsolute, cycles4, 3); break;
+        case 0x70: ADC(readAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x79: ADC(readAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0x61: ADC(readIndexedIndirect, cycles6, 2); break;
+        case 0x71: ADC(readPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
 
-        case 0x29: andImmediate(operand1); break;
-        case 0x35: andZeroPage(operand1); break;
-        case 0x2d: andZeroPageX(operand1); break;
-        case 0x3d: andAbsolute(operand1, operand2); break;
-        case 0x39: andAbsoluteX(operand1, operand2); break;
-        case 0x21: andAbsoluteY(operand1, operand2); break;
-        case 0x31: andIndexedIndirect(operand1); break;
+        case 0x29: AND(readImmediate, cycles2, 2); break;
+        case 0x25: AND(readZeroPage, cycles3, 2); break;
+        case 0x35: AND(readZeroPageX, cycles4, 2); break;
+        case 0x2d: AND(readAbsolute, cycles4, 3); break;
+        case 0x3d: AND(readAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x39: AND(readAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0x21: AND(readIndexedIndirect, cycles6, 2); break;
+        case 0x31: AND(readPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
 
-        case 0x0A: aslA(); break;
-        case 0x06: aslZeroPage(operand1); break;
-        case 0x16: aslZeroPageX(operand1); break;
-        case 0x0E: aslAbsolute(operand1, operand2); break;
-        case 0x1E: aslAbsoluteX(operand1, operand2); break; 
+        //lambda 
+        case 0x0A: ASL(readA, storeA, cycles2, 1); break;
+        case 0x06: ASL(readZeroPage, storeZeroPage, cycles5, 2); break;
+        case 0x16: ASL(readZeroPageX, storeZeroPageX, cycles6, 2); break;
+        case 0x0E: ASL(readAbsolute, storeAbsolute, cycles6, 3); break;
+        case 0x1E: ASL(readAbsoluteX, storeAbsoluteX, cycles7, 3); break; 
 
-        case 0x90: branch(operand1, CARRY, false); break;
-        case 0xb0: branch(operand1, CARRY, true); break;
-        case 0xf0: branch(operand1, ZERO, true); break;
-        case 0x30: branch(operand1, SIGN, true); break;
-        case 0xd0: branch(operand1, ZERO, false); break;
-        case 0x10: branch(operand1, SIGN, false); break;
+        case 0x90: branch(operand1, !getFlag(CARRY)); break;
+        case 0xb0: branch(operand1, getFlag(CARRY)); break;
+        case 0xf0: branch(operand1, getFlag(ZERO)); break;
+        case 0x30: branch(operand1, getFlag(SIGN)); break;
+        case 0xd0: branch(operand1, !getFlag(ZERO)); break;
+        case 0x10: branch(operand1, !getFlag(SIGN)); break;
 
 		default:
 			std::cout << static_cast<int32_t>(opcode)
@@ -89,255 +123,40 @@ Cycle CPU::changeState() {
 	
 	return mLastInstructionCycles;
 }
-//ADC - Add With Carry
-//immidiate: adc #oper
-//2 bytes & 2 cycles
 
-//a+b=c
-//(!((a & 80) ^ (b & 80)) ^ (c & 80))
-void CPU::adcImmediate(uint8_t operand1) {
-    uint16_t sum = mReg.A + operand1 + getFlag(CARRY);
-    setFlag(STATUS(CARRY), sum > 0xff);
-    setOverflow(mReg.A, operand1, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 2;
-    mReg.A = sum;
-    mReg.PC += 2;
-}
-
-//zero page: adc oper
-//2 bytes & 3 cycles
-void CPU::adcZeroPage(uint8_t operand1) {
-    uint8_t mem_value = mMem.readb(operand1); 
+void CPU::ADC(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment) {
+    uint8_t mem_value = read();
     uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
     setFlag(STATUS(CARRY), sum > 0xff);
     setOverflow(mReg.A, mem_value, sum);
     setFlag(STATUS(ZERO), !sum);
     setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 3;
+    mLastInstructionCycles = cycles();
     mReg.A = sum;
-    mReg.PC += 2;
+    mReg.PC += increment;
 }
 
-//zero page,X: adc oper,X
-//2 bytes & 4 cycles
-void CPU::adcZeroPageX(uint8_t operand1){
-    uint8_t mem_value = mMem.readb(operand1 + mReg.X); 
-    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
-    setFlag(STATUS(CARRY), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 4;
-    mReg.A = sum;
-    mReg.PC += 2;
-}
-
-//Absolute: adc oper
-//3 bytes & 4 cycles
-void CPU::adcAbsolute(uint8_t operand1, uint8_t operand2) {
-    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100); 
-    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
-    setFlag(STATUS(CARRY|OVERFLOW), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 4;
-    mReg.A = sum;
-    mReg.PC += 3;
-}
-
-//Absolute,X: adc oper,X
-//3 bytes & 4(+1 if page boundary exceeded) cycles
-void CPU::adcAbsoluteX(uint8_t operand1, uint8_t operand2) {
-    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100 + mReg.X); 
-    uint16_t sum = mReg.A + mem_value  + getFlag(CARRY);
-    setFlag(STATUS(CARRY|OVERFLOW), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 4 + (operand1 + mReg.X) > 0xff;
-    mReg.A = sum;
-    mReg.PC += 3;
-}
-
-//Absolute,Y: adc oper,Y
-//3 bytes & 4(+1 if page boundary exceeded) cycles
-void CPU::adcAbsoluteY(uint8_t operand1, uint8_t operand2) {
-    uint8_t mem_value =  mMem.readb(operand1 + operand2*0x100 + mReg.Y);
-    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
-    setFlag(STATUS(CARRY), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 4 + (operand1 + mReg.Y) > 0xff;
-    mReg.A = sum;
-    mReg.PC += 3;
-}
-
-//(Indirect,X): adc (oper,X)
-//2 bytes & 6 cycles 
-void CPU::adcIndexedIndirect(uint8_t operand1) {
-    uint8_t mem_value =  mMem.readb(mMem.readw(operand1 + mReg.X));
-    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
-    setFlag(STATUS(CARRY), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 6;
-    mReg.A = sum;
-    mReg.PC += 2;
-}
-
-//(Indirect),X: adc (oper),X
-//2 bytes & 5 cycles
-void CPU::adcPreIndexedIndirect(uint8_t operand1) {
-    uint8_t mem_value = mMem.readb(mMem.readw(operand1) + mReg.X);
-    uint16_t sum = mReg.A + mem_value + getFlag(CARRY);
-    setFlag(STATUS(CARRY), sum > 0xff);
-    setOverflow(mReg.A, mem_value, sum);
-    setFlag(STATUS(ZERO), !sum);
-    setFlag(STATUS(SIGN), sum & 0x80); 
-    mLastInstructionCycles = 5 + (mMem.readb(operand1) + mReg.X) > 0xff;
-    mReg.A = sum;
-    mReg.PC += 2;
-}
-
-//AND -- memory with accumalator
-//immediate: and #oper
-//2 bytes, 2 cycles
-void CPU::andImmediate(uint8_t operand1) {
-    mReg.A &= operand1;
+void CPU::AND(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment) {
+    mReg.A &= read();
     setFlag(STATUS(ZERO), mReg.A);
     setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 2;
-    mReg.PC += 2;
+    mLastInstructionCycles = cycles();
+    mReg.PC += increment;
 }
 
-//zeropage: and oper
-//2 bytes, 3 cycles
-void CPU::andZeroPage(uint8_t operand1) {
-    mReg.A &= mMem.readb(operand1);
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 3;
-    mReg.PC += 2;
-}
-
-//zeropage,X: and oper,X
-//2 bytes, 4 cycles
-void CPU::andZeroPageX(uint8_t operand1) {
-    mReg.A &= mMem.readb(operand1 + mReg.X);
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 4;
-    mReg.PC += 2;
-}
-
-//absolute: and oper
-//3 bytes, 4 cycles
-void CPU::andAbsolute(uint8_t operand1, uint8_t operand2) {
-    mReg.A &= mMem.readb(operand1 + operand2*0x100);
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 4;
-    mReg.PC += 3;
-}
-
-//absolute,X: and oper,X
-//3 bytes, 4 + (1 if boundary crossed)
-void CPU::andAbsoluteX(uint8_t operand1, uint8_t operand2) {
-    mReg.A &= mMem.readb(operand1 + operand2*0x100 + mReg.X);
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 4 + (operand1 + mReg.X) > 0xFF;
-    mReg.PC += 3;
-}
-
-//indirect absolute,x: and (oper,X)
-//4 bytes, 4 + (1 if boundary crossed)
-void CPU::andAbsoluteY(uint8_t operand1, uint8_t operand2) {
-    mReg.A &= mMem.readb(mMem.readw(operand1 + mReg.X));
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 6;
-    mReg.PC += 2;
-}
-
-//absolute,Y: and (oper),Y
-//4 bytes, 4 + (1 if boundary crossed)
-void CPU::andIndexedIndirect(uint8_t operand1) {
-    mReg.A &= mMem.readb(mMem.readw(operand1) + mReg.Y);
-    setFlag(STATUS(ZERO), mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 5 + (operand1 + mReg.Y) > 0xFF;
-    mReg.PC += 2;
-}
-
-void CPU::andPreIndexedIndirect(uint8_t operand1) {
-    mReg.A &= mMem.readb(mMem.readw(operand1) + mReg.X);
-    setFlag(STATUS(ZERO), !mReg.A);
-    setFlag(STATUS(SIGN), mReg.A & 0x80); 
-    mLastInstructionCycles = 5 + (mMem.readb(operand1) + mReg.X) > 0xff;
-    mReg.PC += 2;
-}
-
-void CPU::aslA() {
-    setFlag(STATUS(CARRY), mReg.A & 0x80);
-    setFlag(STATUS(SIGN), mReg.A & 0x70);
-    mReg.A <<= 1;
-    setFlag(STATUS(ZERO), !mReg.A);
-    mLastInstructionCycles = 2;
-    mReg.PC++;
-}
-
-void CPU::aslZeroPage(uint8_t operand1) {
-    uint8_t mem_value = mMem.readb(operand1);
+void CPU::ASL(std::function<uint8_t()> read, std::function<void(uint8_t value)> store, std::function<uint8_t()> cycles, uint8_t increment) {
+    uint8_t mem_value = read();
     setFlag(CARRY, mem_value & 0x80);
     setFlag(SIGN, mem_value & 0x70);
     mem_value <<= 1;
     setFlag(ZERO, !mem_value);
-    mMem.write(operand1, mem_value); 
-    mLastInstructionCycles = 5;
-    mReg.PC += 2;
+    store(mem_value); 
+    mLastInstructionCycles = cycles();
+    mReg.PC += increment;
 }
 
-void CPU::aslZeroPageX(uint8_t operand1) {
-    uint8_t mem_value = mMem.readb(operand1 + mReg.X); 
-    setFlag(CARRY, mem_value & 0x80);
-    setFlag(SIGN, mem_value & 0x70);
-    mem_value <<= 1;
-    setFlag(ZERO, !mem_value);
-    mMem.write(operand1 + mReg.X, mem_value);
-    mLastInstructionCycles = 6;
-    mReg.PC += 2;
-}
-
-void CPU::aslAbsolute(uint8_t operand1, uint8_t operand2) {
-    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100);
-    setFlag(CARRY, mem_value & 0x80);
-    setFlag(SIGN, mem_value & 0x70);
-    mem_value <<= 1;
-    setFlag(ZERO, !mem_value);
-    mMem.write(operand1 + operand2*0x100, mem_value);
-    mLastInstructionCycles = 6;
-    mReg.PC += 3;
-}
-
-void CPU::aslAbsoluteX(uint8_t operand1, uint8_t operand2) {
-    uint8_t mem_value = mMem.readb(operand1 + operand2*0x100 + mReg.X); 
-    setFlag(CARRY, mem_value & 0x80);
-    setFlag(SIGN, mem_value & 0x70);
-    mem_value <<= 1;
-    setFlag(ZERO, !mem_value);
-    mMem.write(operand1 + operand2*0x100 + mReg.X, mem_value);
-    mLastInstructionCycles = 7;
-    mReg.PC += 2;
-}
-
-void CPU::branch(uint8_t operand1, StatusFlag sflag, bool cond) {
-    if((bool)getFlag(sflag) == cond) {
+void CPU::branch(uint8_t operand1, bool flag) {
+    if(flag) {
         mReg.PC += 2;
         mLastInstructionCycles = 2;
     } else {
