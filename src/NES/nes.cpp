@@ -7,12 +7,11 @@
 
 NES::NES(const RomFile* rom) {
 	cpu = CPU(rom);
-	cpu.resetInterrupt();
-
+	restart();
 }
 
 void NES::restart() {
-
+	cpu.resetInterrupt();
 }
 
 int32_t NES::runCycle(void) {

@@ -1,6 +1,6 @@
-
 #include <stdint.h>
 #include <iostream>
+#include <iomanip>
 #include <cstdio>
 #include <cstring>
 #include "memory.hpp"
@@ -10,6 +10,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::hex;
+using std::setfill;
+using std::setw;
 
 Memory::Memory() {
 	rom = NULL;
@@ -39,6 +41,10 @@ uint8_t Memory::readb(uint32_t offset) {
 			fprintf(stdout, "Memory read from MEM_UNKNOWN at 0x%x\n", offset);
 			break;
 		case MEM_WORKRAM:
+			cout << "Read from MEM_WORKRAM at 0x" << setw(2) << setfill('0')
+			<< offset;
+			//cout << ": " << hex << mRam[offset] << endl;
+			fprintf(stdout, ": %0.X\n", mRam[offset]);
 			return mRam[offset];
 			break;
 		case MEM_PPUCONTROL:
@@ -64,7 +70,9 @@ uint16_t Memory::readw(uint32_t offset) {
 	word[0] = readb(offset);
 	word[1] = readb(offset+1);
 
-	cout << "Read a word from " << hex << offset << endl;
+	cout << "Read word " 
+	<< hex << setw(2) << setfill('0') << word[0] //<< word[1]
+	<< " from " << hex << offset << endl;
 	return static_cast<uint16_t>(word[1] | (word[0] << 8));
 }
 
