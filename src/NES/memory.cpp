@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <cstdio>
 #include <cstring>
+#include "../nintendo.hpp"
 #include "memory.hpp"
 #include "../romfile.hpp"
 
@@ -26,8 +27,14 @@ Memory::Memory(const RomFile* newrom) {
 uint8_t Memory::mapMemory(uint32_t offset) {
 	if (offset >= 0x8000) {
 		// zero mapper in action
-		uint32_t prg_offset = offset - 0x8000;
-		return rom->romData[prg_offset];
+		uint32_t mirrored_offset = offset - 0x8000;
+
+		if (rom->numRomBanks == 1) {
+			mirrored_offset = offset % ROM_BANKSIZE; 
+		}
+
+		fprintf(stdout, "PRG offset: 0x%0.x --> 0x%0.x\n", offset, mirrored_offset);
+		return rom->romData[mirrored_offset];
 	}
 
 	return 0;
@@ -51,7 +58,7 @@ uint8_t Memory::readb(uint32_t offset) {
 			fprintf(stdout, "PPU Control read requested from 0x%x\n", offset);
 			break;
 		case MEM_MAPPER:
-			fprintf(stdout, "Mapper memory read from 0x%x\n", offset);
+			fprintf(stdout, "Mapper memory read from 0x%x: %d\n", offset, mapMemory(offset));
 			return mapMemory(offset);
 
 			break;

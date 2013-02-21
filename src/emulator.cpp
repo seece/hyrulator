@@ -6,7 +6,7 @@
 #include <ios>
 #include "emulator.hpp"
 #include "romfile.hpp"
-#include "nintendo.h"
+#include "nintendo.hpp"
 
 Emulator::Emulator() {
 	std::cout << "Emulator booting up." ;

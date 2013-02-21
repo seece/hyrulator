@@ -4,7 +4,7 @@
 #include <fstream>
 #include <ios>
 #include "romfile.hpp"
-#include "nintendo.h"
+#include "nintendo.hpp"
 
 #define BITFLAG(flags,num) (((flags & (1<<num)) == 1) ? true : false)
 
@@ -28,7 +28,7 @@ void freeRom(RomFile* romp) {
 // Loads a rom to the emulator memory.
 // returns NULL on failure
 // based on http://fms.komkon.org/EMUL8/NES.html#LABM
-	RomFile loadRom(char * filepath) {
+RomFile loadRom(char * filepath) {
 	RomFile rom;
 
 	std::ifstream input (filepath, std::ifstream::in);
@@ -96,13 +96,18 @@ void freeRom(RomFile* romp) {
 
 	fprintf(stdout, "Video mode: %s\n", rom.NTSC ? "NTSC" : "PAL");
 
-	// skip zeros
-	input.seekg(6, std::ios::cur);
-	rom.romData = new char[BANKSIZE * rom.numRomBanks];
-	rom.vromData = new char[BANKSIZE * rom.numVRomBanks];
+	input.seekg(6, std::ios::cur); // skip zeros
 
-	input.read((char *)rom.romData, BANKSIZE * rom.numRomBanks);
-	input.read((char *)rom.vromData, BANKSIZE * rom.numVRomBanks);
+	int32_t romSize = ROM_BANKSIZE * rom.numRomBanks;
+	int32_t vromSize = VROM_BANKSIZE * rom.numVRomBanks;
+	rom.romData = new char[romSize];
+	rom.vromData = new char[vromSize];
+
+	fprintf(stdout, "ROM size: %d B\t VROM size: %d B\n", 
+		romSize, vromSize);
+
+	input.read((char *)rom.romData, romSize);
+	input.read((char *)rom.vromData, vromSize);
 
 	input.close();
 
