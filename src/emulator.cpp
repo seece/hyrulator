@@ -44,4 +44,6 @@ int32_t Emulator::run() {
 	return 0;
 }
 
-
+void Emulator::loadRom(char* path) {
+	m_rom = loadRomFile(path);
+}

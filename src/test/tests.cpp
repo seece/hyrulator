@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
 	Emulator emu;
 	Debugger debug;
-	RomFile rom = loadRom(rompath);
+	RomFile rom = loadRomFile(rompath);
 
 	NES nes(&rom);
 	debug.attachNes(&nes);
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 		int32_t cycle = nes.runCycle();
 	}
 
-	freeRom(&rom);
+	freeRomFile(&rom);
 
 	return 0;
 }

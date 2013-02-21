@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <iostream>
 #include "main.hpp"
+#include "romfile.hpp"
 #include "emulator.hpp"
 
 int main(int argc, char *argv[]) {
@@ -12,11 +13,11 @@ int main(int argc, char *argv[]) {
 
 	char * rompath = "rom/Zelda.NES";
 
-	RomFile rom = loadRom(rompath);
+	RomFile rom = loadRomFile(rompath);
 	Emulator emu;
 	emu.run();
 
-	freeRom(&rom);
+	freeRomFile(&rom);
 
 	return 0;
 }
