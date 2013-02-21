@@ -47,16 +47,16 @@ Cycle CPU::changeState() {
 	uint8_t operand1 = mMem.readb(mReg.PC + 1);
 	uint8_t operand2 = mMem.readb(mReg.PC + 2);
 
-    uint8_t addressImmediate = operand1;
-    uint8_t addressZeroPage = mMem.readb(operand1);
-    uint8_t addressZeroPageX = mMem.readb(operand1 + mReg.X);
-    uint8_t addressAbsolute = mMem.readb(operand1 + operand2*0x100);
-    uint8_t addressAbsoluteX = mMem.readb(operand1 + operand2*0x100 + mReg.X);
-    uint8_t addressAbsoluteY =  mMem.readb(operand1 + operand2*0x100 + mReg.Y);
-    uint8_t addressIndexedIndirect =  mMem.readb(mMem.readw(operand1 + mReg.X));
-    uint8_t addressPreIndexedIndirect = mMem.readb(mMem.readw(operand1) + mReg.X);
+    uint8_t addressImmediate = mReg.PC + 1;
+    uint8_t addressZeroPage = operand1;
+    uint8_t addressZeroPageX = operand1 + mReg.X;
+    uint8_t addressAbsolute = operand1 + operand2*0x100;
+    uint8_t addressAbsoluteX = operand1 + operand2*0x100 + mReg.X;
+    uint8_t addressAbsoluteY =  operand1 + operand2*0x100 + mReg.Y;
+    uint8_t addressIndexedIndirect =  mMem.readw(operand1 + mReg.X);
+    uint8_t addressPreIndexedIndirect = mMem.readw(operand1) + mReg.Y;
 
-    uint8_t cyclesAbsoluteX = 4 + ((operand1 + mReg.Y) > 0xff);
+    uint8_t cyclesAbsoluteX = 4 + ((operand1 + mReg.X) > 0xff);
     uint8_t cyclesAbsoluteY = 4 + ((operand1 + mReg.Y) > 0xff);
     uint8_t cyclesPreIndexedIndirect = 5 + ((mMem.readb(operand1) + mReg.Y) > 0xff);
     #define STATUS(X) static_cast<StatusFlag>(X)
@@ -105,12 +105,58 @@ Cycle CPU::changeState() {
         case 0x58: setFlag(INTERRUPT, 0); mReg.PC++; mLastInstructionCycles = 2; break;
         case 0xb8: setFlag(OVERFLOW, 0); mReg.PC++; mLastInstructionCycles = 2; break;
 
-		default:
-			std::cout << static_cast<int32_t>(opcode)
-			 	<< " is not a legal opcode."
-				<< " PC will be incremented by one byte"
-				<< std::endl;
-			mReg.PC += 1;
+        case 0xc9: compare(mReg.A, addressImmediate, 2, 2); break;
+        case 0xc5: compare(mReg.A, addressZeroPage, 3, 2); break;
+        case 0xd5: compare(mReg.A, addressZeroPageX, 4, 2); break;
+        case 0xcd: compare(mReg.A, addressAbsolute, 4, 3); break;
+        case 0xdd: compare(mReg.A, addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0xd9: compare(mReg.A, addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0xc1: compare(mReg.A, addressIndexedIndirect, 6, 2); break;
+        case 0xd1: compare(mReg.A, addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0xe0: compare(mReg.X, addressImmediate, 2, 2); break;
+        case 0xe4: compare(mReg.X, addressZeroPage, 3, 2); break;
+        case 0xec: compare(mReg.X, addressAbsolute, 4, 3); break;
+
+        case 0xc0: compare(mReg.X, addressImmediate, 2, 2); break;
+        case 0xc4: compare(mReg.X, addressZeroPage, 3, 2); break;
+        case 0xcc: compare(mReg.X, addressAbsolute, 4, 3); break;
+
+        case 0xc6: addToMemory(addressZeroPage, 5, 2, -1); break;
+        case 0xd6: addToMemory(addressZeroPageX, 6, 2, -1); break;
+        case 0xce: addToMemory(addressAbsolute, 6, 3, -1); break;
+        case 0xde: addToMemory(addressAbsoluteX, 7, 3, -1); break;
+
+        case 0xca: addToRegister(mReg.X, -1); break;
+        case 0x88: addToRegister(mReg.Y, -1); break;
+
+        case 0x49: EOR(addressImmediate, 2, 2); break;
+        case 0x45: EOR(addressZeroPage, 3, 2); break;
+        case 0x55: EOR(addressZeroPageX, 4, 2); break;
+        case 0x4d: EOR(addressAbsolute, 4, 3); break;
+        case 0x5d: EOR(addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x59: EOR(addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0x41: EOR(addressIndexedIndirect, 6, 2); break;
+        case 0x51: EOR(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0xe6: addToMemory(addressZeroPage, 5, 2, 1); break;
+        case 0xf6: addToMemory(addressZeroPageX, 6, 2, 1); break;
+        case 0xee: addToMemory(addressAbsolute, 6, 3, 1); break;
+        case 0xfe: addToMemory(addressAbsoluteX, 7, 3, 1); break;
+
+        case 0xe8: addToRegister(mReg.X, 1); break;
+        case 0xc8: addToRegister(mReg.Y, 1); break;
+
+        case 0x4c: JMP(operand1 + operand2*0x100, 3); break;
+        case 0x6c: JMP(mMem.readw(operand1 + operand2*0x100), 5); break;
+
+        case 0x20: JSR(operand1, operand2); break; 
+        default:
+            std::cout << static_cast<int32_t>(opcode)
+                << " is not a legal opcode."
+                << " PC will be incremented by one byte"
+                << std::endl;
+            mReg.PC += 1;
 	}
 	
 	return mLastInstructionCycles;
@@ -176,13 +222,61 @@ void CPU::BIT(uint8_t address, uint8_t cycles, uint8_t increment) {
     mReg.PC += increment;
 }
 
-
 void CPU::BRK() {
     mReg.PC++;
-    setFlag(INTERRUPT);
-    //TODO
+    mReg.SP -= 3;
+    mMem.write(0x0100 + mReg. PC + 3, mReg.PC & 0xff00);
+    mMem.write(0x0100 + mReg. PC + 2, mReg.PC & 0x00ff);
+    mMem.write(0x0100 + mReg. PC + 1, mReg.S & STATUS(BREAK));
+    mLastInstructionCycles = 7;
 }
 
+void CPU::compare(uint8_t reg, uint8_t address, uint8_t cycles, uint8_t increment) {
+    int32_t sum = reg - mMem.readb(address);
+    setFlag(ZERO, !sum);
+    setFlag(CARRY, sum > 0xff);
+    setFlag(SIGN, sum < 0);
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+
+void CPU::addToMemory(uint8_t address, uint8_t cycles, uint8_t increment, int8_t addition) {
+    uint8_t sum = mMem.readb(address) + addition;
+    mMem.write(address, sum);
+    setFlag(ZERO, !sum);    
+    setFlag(SIGN, sum & 0x80);
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+
+void CPU::addToRegister(uint8_t& reg, int8_t addition) {
+    reg += addition;
+    setFlag(ZERO, !reg);
+    setFlag(SIGN, reg & 0x80);
+    mLastInstructionCycles = 2;
+    mReg.PC++;
+}
+
+void CPU::EOR(uint8_t address, uint8_t cycles, uint8_t increment) {
+    mReg.A ^= mMem.readb(address);
+    setFlag(ZERO, mReg.A);
+    setFlag(SIGN, mReg.A & 0x80); 
+    mLastInstructionCycles = cycles; 
+    mReg.PC += increment;
+}
+
+void CPU::JMP(uint8_t address, uint8_t cycles) {
+    mReg.PC = address;
+    mLastInstructionCycles = cycles;   
+}
+
+void CPU::JSR(uint8_t operand1, uint8_t operand2) {
+    mReg.SP -= 2;
+    mMem.write(operand1, 0x0100+mReg.SP + 1);
+    mMem.write(operand2, 0x0100+mReg.SP + 2);
+    mReg.PC = operand1 + operand2*0x100;
+    mLastInstructionCycles = 3;   
+}
 
 void CPU::resetInterrupt(void) {
 	// read the reset interrupt vector

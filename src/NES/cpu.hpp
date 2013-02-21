@@ -49,7 +49,13 @@ class CPU {
         void branch(uint8_t operand1, bool flag);
         void BIT(uint8_t address, uint8_t cycles, uint8_t increment);
         void BRK();
-        void CMP(uint8_t address, uint8_t cycles, uint8_t increment);
+        void compare(uint8_t reg, uint8_t address, uint8_t cycles, uint8_t increment);
+        void addToMemory(uint8_t address, uint8_t cycles, uint8_t increment, int8_t addition);
+        void addToRegister(uint8_t& reg, int8_t addition);
+        void EOR(uint8_t address, uint8_t cycles, uint8_t increment);
+        void JMP(uint8_t address, uint8_t cycles);
+        void JSR(uint8_t operand1, uint8_t operand2);
+        
         //bit
 		friend class Debugger;
 	private:
