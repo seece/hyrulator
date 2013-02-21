@@ -45,7 +45,7 @@ class CPU {
         void ADC(uint8_t address, uint8_t cycles, uint8_t increment);
         void AND(uint8_t address, uint8_t cycles, uint8_t increment);
         void ASL(uint8_t address, uint8_t cycles, uint8_t increment);
-        void ASLA(uint8_t cycles, uint8_t increment);
+        void ASLA();
         void branch(uint8_t operand1, bool flag);
         void BIT(uint8_t address, uint8_t cycles, uint8_t increment);
         void BRK();
@@ -55,7 +55,12 @@ class CPU {
         void EOR(uint8_t address, uint8_t cycles, uint8_t increment);
         void JMP(uint8_t address, uint8_t cycles);
         void JSR(uint8_t operand1, uint8_t operand2);
-        
+        void loadToRegister(uint8_t& reg, uint8_t address, uint8_t cycles, uint8_t increment);
+        void ASR(uint8_t address, uint8_t cycles, uint8_t increment);
+        void ASRA();
+        void ORA(uint8_t address, uint8_t cycles, uint8_t increment);
+        void push(uint8_t reg);
+        void pull(uint8_t& reg);
         //bit
 		friend class Debugger;
 	private:

@@ -50,6 +50,7 @@ Cycle CPU::changeState() {
     uint8_t addressImmediate = mReg.PC + 1;
     uint8_t addressZeroPage = operand1;
     uint8_t addressZeroPageX = operand1 + mReg.X;
+    uint8_t addressZeroPageY = operand1 + mReg.Y;
     uint8_t addressAbsolute = operand1 + operand2*0x100;
     uint8_t addressAbsoluteX = operand1 + operand2*0x100 + mReg.X;
     uint8_t addressAbsoluteY =  operand1 + operand2*0x100 + mReg.Y;
@@ -80,7 +81,7 @@ Cycle CPU::changeState() {
         case 0x21: AND(addressIndexedIndirect, 6, 2); break;
         case 0x31: AND(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
 
-        case 0x0A: ASLA(2, 1); break;
+        case 0x0A: ASLA(); break;
         case 0x06: ASL(addressZeroPage, 5, 2); break;
         case 0x16: ASL(addressZeroPageX, 6, 2); break;
         case 0x0E: ASL(addressAbsolute, 6, 3); break;
@@ -151,6 +152,49 @@ Cycle CPU::changeState() {
         case 0x6c: JMP(mMem.readw(operand1 + operand2*0x100), 5); break;
 
         case 0x20: JSR(operand1, operand2); break; 
+
+        case 0xa9: loadToRegister(mReg.A, addressImmediate, 2, 2); break;
+        case 0xa5: loadToRegister(mReg.A, addressZeroPage, 3, 2); break;
+        case 0xb5: loadToRegister(mReg.A, addressZeroPageX, 4, 2); break;
+        case 0xad: loadToRegister(mReg.A, addressAbsolute, 4, 3); break;
+        case 0xbd: loadToRegister(mReg.A, addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0xb9: loadToRegister(mReg.A, addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0xa1: loadToRegister(mReg.A, addressIndexedIndirect, 6, 2); break;
+        case 0xb1: loadToRegister(mReg.A, addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0xa2: loadToRegister(mReg.X, addressImmediate, 2, 2); break;
+        case 0xa6: loadToRegister(mReg.X, addressZeroPage, 3, 2); break;
+        case 0xb6: loadToRegister(mReg.X, addressZeroPageY, 4, 2); break;
+        case 0xae: loadToRegister(mReg.X, addressAbsolute, 4, 3); break;
+        case 0xbe: loadToRegister(mReg.X, addressAbsoluteY, cyclesAbsoluteY, 3); break;
+
+        case 0xa0: loadToRegister(mReg.Y, addressImmediate, 2, 2); break;
+        case 0xa4: loadToRegister(mReg.Y, addressZeroPage, 3, 2); break;
+        case 0xb4: loadToRegister(mReg.Y, addressZeroPageX, 4, 2); break;
+        case 0xac: loadToRegister(mReg.Y, addressAbsolute, 4, 3); break;
+        case 0xbc: loadToRegister(mReg.Y, addressAbsoluteX, cyclesAbsoluteX, 3); break;
+
+        case 0x4A: ASRA(); break;
+        case 0x46: ASR(addressZeroPage, 5, 2); break;
+        case 0x56: ASR(addressZeroPageX, 6, 2); break;
+        case 0x4E: ASR(addressAbsolute, 6, 3); break;
+        case 0x5E: ASR(addressAbsoluteX, 7, 3); break; 
+
+        case 0xea: mReg.PC++; mLastInstructionCycles = 2; break;
+
+        case 0x09: ORA(addressImmediate, 2, 2); break;
+        case 0x05: ORA(addressZeroPage, 3, 2); break;
+        case 0x15: ORA(addressZeroPageX, 4, 2); break;
+        case 0x0d: ORA(addressAbsolute, 4, 3); break;
+        case 0x1d: ORA(addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x19: ORA(addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0x01: ORA(addressIndexedIndirect, 6, 2); break;
+        case 0x11: ORA(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0x48: push(mReg.A); break;
+        case 0x08: push(mReg.SP); break;
+        case 0x68: pull(mReg.A); break;
+        case 0x28: pull(mReg.A); break;
         default:
             std::cout << static_cast<int32_t>(opcode)
                 << " is not a legal opcode."
@@ -193,13 +237,13 @@ void CPU::ASL(uint8_t address, uint8_t cycles, uint8_t increment) {
     mReg.PC += increment;
 }
 
-void CPU::ASLA(uint8_t cycles, uint8_t increment) {
+void CPU::ASLA() {
     setFlag(CARRY, mReg.A & 0x80);
     setFlag(SIGN, mReg.A & 0x70);
     mReg.A <<= 1;
     setFlag(ZERO, !mReg.A);
-    mLastInstructionCycles = cycles;
-    mReg.PC += increment;
+    mLastInstructionCycles = 2;
+    mReg.PC += 1;
 }
 
 void CPU::branch(uint8_t operand1, bool flag) {
@@ -272,10 +316,60 @@ void CPU::JMP(uint8_t address, uint8_t cycles) {
 
 void CPU::JSR(uint8_t operand1, uint8_t operand2) {
     mReg.SP -= 2;
-    mMem.write(operand1, 0x0100+mReg.SP + 1);
-    mMem.write(operand2, 0x0100+mReg.SP + 2);
+    mMem.write(0x0100+mReg.SP + 1, operand1);
+    mMem.write(0x0100+mReg.SP + 2, operand2);
     mReg.PC = operand1 + operand2*0x100;
     mLastInstructionCycles = 3;   
+}
+
+void CPU::loadToRegister(uint8_t& reg, uint8_t address, uint8_t cycles, uint8_t increment) {
+    reg = mMem.readb(address);
+    setFlag(SIGN, 0x80 & reg);
+    setFlag(ZERO, !reg);
+    mReg.PC += increment;
+    mLastInstructionCycles = cycles;
+}
+
+void CPU::ASR(uint8_t address, uint8_t cycles, uint8_t increment) {
+    uint8_t mem_value = mMem.readb(address);
+    setFlag(CARRY, mem_value & 0x01);
+    clearFlag(SIGN);
+    mem_value >>= 1;
+    setFlag(ZERO, !mem_value);
+    mMem.write(address, mem_value); 
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+
+void CPU::ASRA() {
+    setFlag(CARRY, mReg.A & 0x01);
+    clearFlag(SIGN);
+    mReg.A >>= 1;
+    setFlag(ZERO, !mReg.A);
+    mLastInstructionCycles = 2;
+    mReg.PC += 1;
+}
+
+void CPU::ORA(uint8_t address, uint8_t cycles, uint8_t increment) {
+    mReg.A |= mMem.readb(address);
+    setFlag(ZERO, mReg.A);
+    setFlag(SIGN, mReg.A & 0x80); 
+    mLastInstructionCycles = cycles; 
+    mReg.PC += increment;
+}
+
+void CPU::push(uint8_t reg) {
+    mMem.write(0x0100 + mReg.SP, reg);
+    mReg.SP--;
+    mLastInstructionCycles = 3;
+    mReg.PC += 1;
+}
+
+void CPU::pull(uint8_t& reg) {
+    mReg.SP++;
+    reg = mMem.readb(0x0100 + mReg.SP);
+    mLastInstructionCycles = 4;
+    mReg.PC += 1;
 }
 
 void CPU::resetInterrupt(void) {
