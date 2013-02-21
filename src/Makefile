@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-c -g -Wall -pedantic -O2
-LDFLAGS=-lstdc++
+LDFLAGS=-lstdc++ -lSDL
 VPATH=src 
 SOURCES=$(wildcard *.cpp) $(wildcard NES/*.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -10,7 +10,7 @@ EXECUTABLE=../hyrulator
 all: $(SOURCES) $(EXECUTABLE)
 	
 $(EXECUTABLE): $(OBJECTS) 
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) -o $@ $(LDFLAGS) 
 
 .cpp.o:
 	$(CC) $(CFLAGS) $< -o $@

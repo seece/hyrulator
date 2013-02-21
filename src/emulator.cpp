@@ -7,16 +7,39 @@
 #include "emulator.hpp"
 #include "romfile.hpp"
 #include "nintendo.hpp"
+#include "SDL/SDL.h"
+
+using std::cout;
+using std::endl;
 
 Emulator::Emulator() {
-	std::cout << "Emulator booting up." ;
+	cout << "Emulator booting up." << endl ;
+	if (SDL_Init(SDL_INIT_EVERYTHING)) {
+		cout << "Couldn't init SDL!" << endl;
+		exit(1);
+	}
 
-	// TODO add NES class initialization here
+	m_screenWidth = 600;
+	m_screenHeight = 480;
+	m_screen = SDL_SetVideoMode(m_screenWidth, m_screenHeight, 32, SDL_SWSURFACE);
+	SDL_WM_SetCaption( "hyrulator", NULL );
+}
+
+Emulator::~Emulator() {
+	SDL_Quit();
 }
 
 int32_t Emulator::run() {
-	std::cout << "Emulator would run a main loop here." 
-		<< std::endl;
+	SDL_Event event;
+	bool quit=false;
+
+	while(quit==false) {
+		while(SDL_PollEvent(&event)) {
+			if (event.type == SDL_QUIT) {
+				quit = true;
+			}
+		}
+	}
 
 	return 0;
 }
