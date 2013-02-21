@@ -46,17 +46,7 @@ Cycle CPU::changeState() {
 	uint8_t opcode = mMem.readb(mReg.PC);
 	uint8_t operand1 = mMem.readb(mReg.PC + 1);
 	uint8_t operand2 = mMem.readb(mReg.PC + 2);
-	//logic
-    /*auto readA = [&] () { return mReg.A; };
-    auto readImmediate = [&] () { return operand1; };
-    auto readZeroPage = [&] () { return mMem.readb(operand1); };
-    auto readZeroPageX = [&] () { return mMem.readb(operand1 + mReg.X); };
-    auto readAbsolute = [&] () { return mMem.readb(operand1 + operand2*0x100); };
-    auto readAbsoluteX = [&] () { return mMem.readb(operand1 + operand2*0x100 + mReg.X); };
-    auto readAbsoluteY =  [&] () { return mMem.readb(operand1 + operand2*0x100 + mReg.Y); };
-    auto readIndexedIndirect =  [&] () { return mMem.readb(mMem.readw(operand1 + mReg.X)); };
-    auto readPreIndexedIndirect = [&] () { return mMem.readb(mMem.readw(operand1) + mReg.X); };
-*/
+
     uint8_t addressImmediate = operand1;
     uint8_t addressZeroPage = mMem.readb(operand1);
     uint8_t addressZeroPageX = mMem.readb(operand1 + mReg.X);
@@ -65,24 +55,7 @@ Cycle CPU::changeState() {
     uint8_t addressAbsoluteY =  mMem.readb(operand1 + operand2*0x100 + mReg.Y);
     uint8_t addressIndexedIndirect =  mMem.readb(mMem.readw(operand1 + mReg.X));
     uint8_t addressPreIndexedIndirect = mMem.readb(mMem.readw(operand1) + mReg.X);
-    //auto storeImmediate = [&] () { operand1; };
-  /*  auto storeA = [&] (const uint8_t& val) { mReg.A = val; };
-    auto storeZeroPage = [&] (const uint8_t& val) { mMem.write(operand1, val); };
-    auto storeZeroPageX = [&] (const uint8_t& val) { mMem.write(operand1 + mReg.X, val); };
-    auto storeAbsolute = [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100, val); };
-    auto storeAbsoluteX = [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100 + mReg.X, val); };
-    auto storeAbsoluteY =  [&] (const uint8_t& val) { mMem.write(operand1 + operand2*0x100 + mReg.Y, val); };
-    auto storeIndexedIndirect =  [&] (const uint8_t& val) { mMem.write(mMem.readw(operand1 + mReg.X), val); };
-    auto storePreIndexedIndirect = [&] (const uint8_t& val) { mMem.write(mMem.readw(operand1) + mReg.X, val); };
-  */
-    //TODO overload instructions so that this unelegancy is reduced 
-    /*auto cycles1 = [] () { return 1; };
-    auto cycles2 = [] () { return 2; };
-    auto cycles3 = [] () { return 3; };
-    auto cycles4 = [] () { return 4; };
-    auto cycles5 = [] () { return 5; };
-    auto cycles6 = [] () { return 6; };
-    auto cycles7 = [] () { return 7; };*/
+
     uint8_t cyclesAbsoluteX = 4 + ((operand1 + mReg.Y) > 0xff);
     uint8_t cyclesAbsoluteY = 4 + ((operand1 + mReg.Y) > 0xff);
     uint8_t cyclesPreIndexedIndirect = 5 + ((mMem.readb(operand1) + mReg.Y) > 0xff);
@@ -93,7 +66,7 @@ Cycle CPU::changeState() {
         case 0x65: ADC(addressZeroPage, 3, 2); break;
         case 0x75: ADC(addressZeroPageX, 4, 2); break;
         case 0x60: ADC(addressAbsolute, 4, 3); break;
-        case 0x70: ADC(addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x7d: ADC(addressAbsoluteX, cyclesAbsoluteX, 3); break;
         case 0x79: ADC(addressAbsoluteY, cyclesAbsoluteY, 3); break;
         case 0x61: ADC(addressIndexedIndirect, 6, 2); break;
         case 0x71: ADC(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
@@ -107,7 +80,7 @@ Cycle CPU::changeState() {
         case 0x21: AND(addressIndexedIndirect, 6, 2); break;
         case 0x31: AND(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
 
-        case 0x0A: ASL(0, 2, 1, MODE_A); break;
+        case 0x0A: ASLA(2, 1); break;
         case 0x06: ASL(addressZeroPage, 5, 2); break;
         case 0x16: ASL(addressZeroPageX, 6, 2); break;
         case 0x0E: ASL(addressAbsolute, 6, 3); break;
@@ -119,6 +92,18 @@ Cycle CPU::changeState() {
         case 0x30: branch(operand1, getFlag(SIGN)); break;
         case 0xd0: branch(operand1, !getFlag(ZERO)); break;
         case 0x10: branch(operand1, !getFlag(SIGN)); break;
+        case 0x50: branch(operand1, !getFlag(OVERFLOW)); break;
+        case 0x70: branch(operand1, getFlag(OVERFLOW)); break;
+
+        case 0x24: BIT(addressZeroPage, 3, 2); break;
+        case 0x2C: BIT(addressAbsolute, 4, 2); break;
+
+        case 0x00: BRK(); break;
+
+        case 0x18: setFlag(CARRY, 0); mReg.PC++; mLastInstructionCycles = 2; break;
+        case 0xd8: setFlag(DECIMAL_MODE, 0); mReg.PC++; mLastInstructionCycles = 2; break;
+        case 0x58: setFlag(INTERRUPT, 0); mReg.PC++; mLastInstructionCycles = 2; break;
+        case 0xb8: setFlag(OVERFLOW, 0); mReg.PC++; mLastInstructionCycles = 2; break;
 
 		default:
 			std::cout << static_cast<int32_t>(opcode)
@@ -151,20 +136,22 @@ void CPU::AND(uint8_t address, uint8_t cycles, uint8_t increment) {
     mReg.PC += increment;
 }
 
-void CPU::ASL(uint8_t address, uint8_t cycles, uint8_t increment, bool modeA) {
+void CPU::ASL(uint8_t address, uint8_t cycles, uint8_t increment) {
     uint8_t mem_value = mMem.readb(address);
-    if(modeA) {
-        mem_value = mReg.A;
-    }
     setFlag(CARRY, mem_value & 0x80);
     setFlag(SIGN, mem_value & 0x70);
     mem_value <<= 1;
     setFlag(ZERO, !mem_value);
-    if(!modeA) {
-        mMem.write(address, mem_value); 
-    } else {
-        mReg.A = mem_value;
-    }
+    mMem.write(address, mem_value); 
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+
+void CPU::ASLA(uint8_t cycles, uint8_t increment) {
+    setFlag(CARRY, mReg.A & 0x80);
+    setFlag(SIGN, mReg.A & 0x70);
+    mReg.A <<= 1;
+    setFlag(ZERO, !mReg.A);
     mLastInstructionCycles = cycles;
     mReg.PC += increment;
 }
@@ -179,6 +166,23 @@ void CPU::branch(uint8_t operand1, bool flag) {
         mReg.PC = address;
     }
 }
+
+void CPU::BIT(uint8_t address, uint8_t cycles, uint8_t increment) {
+    uint8_t mem_value = mMem.readb(address);
+    setFlag(SIGN, mem_value & 0x80);
+    setFlag(OVERFLOW, mem_value & 0x70);
+    setFlag(ZERO, !(mem_value & mReg.A));
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+
+
+void CPU::BRK() {
+    mReg.PC++;
+    setFlag(INTERRUPT);
+    //TODO
+}
+
 
 void CPU::resetInterrupt(void) {
 	// read the reset interrupt vector

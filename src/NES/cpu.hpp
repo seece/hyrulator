@@ -4,13 +4,11 @@
 #include <functional>
 #include "memory.hpp"
 
-#define MODE_A true
-
 enum StatusFlag { 	CARRY = 0x01,
 			ZERO = 0x02,
 			INTERRUPT = 0x04,
 			DECIMAL_MODE = 0x08,
-			BRK = 0x10, 
+			BREAK = 0x10, 
 			//ALWAYS_ONE = 0x20,
 			OVERFLOW = 0x40,
 			SIGN= 0x80 };
@@ -46,9 +44,11 @@ class CPU {
         //Processor commands
         void ADC(uint8_t address, uint8_t cycles, uint8_t increment);
         void AND(uint8_t address, uint8_t cycles, uint8_t increment);
-        void ASL(uint8_t address, uint8_t cycles, uint8_t increment, bool modeA=false);
-        //branch: bcs
+        void ASL(uint8_t address, uint8_t cycles, uint8_t increment);
+        void ASLA(uint8_t cycles, uint8_t increment);
         void branch(uint8_t operand1, bool flag);
+        void BIT(uint8_t address, uint8_t cycles, uint8_t increment);
+        void BRK();
         //bit
 		friend class Debugger;
 	private:
