@@ -49,6 +49,7 @@ class CPU {
         void branch(uint8_t operand1, bool flag);
         void BIT(uint8_t address, uint8_t cycles, uint8_t increment);
         void BRK();
+        void CMP(uint8_t address, uint8_t cycles, uint8_t increment);
         //bit
 		friend class Debugger;
 	private:
