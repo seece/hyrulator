@@ -4,6 +4,8 @@
 #include <functional>
 #include "memory.hpp"
 
+#define MODE_A true
+
 enum StatusFlag { 	CARRY = 0x01,
 			ZERO = 0x02,
 			INTERRUPT = 0x04,
@@ -42,9 +44,9 @@ class CPU {
 		Cycle getClock();
 		Cycle changeState();
         //Processor commands
-        void ADC(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment);
-        void AND(std::function<uint8_t()> read, std::function<uint8_t()> cycles, uint8_t increment);
-        void ASL(std::function<uint8_t()> read, std::function<void(uint8_t value)> store, std::function<uint8_t()> cycles, uint8_t increment);
+        void ADC(uint8_t address, uint8_t cycles, uint8_t increment);
+        void AND(uint8_t address, uint8_t cycles, uint8_t increment);
+        void ASL(uint8_t address, uint8_t cycles, uint8_t increment, bool modeA=false);
         //branch: bcs
         void branch(uint8_t operand1, bool flag);
         //bit
