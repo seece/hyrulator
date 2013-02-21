@@ -12,11 +12,14 @@ class Emulator {
 		~Emulator();
 
 		int32_t run(void);
+		void loadRom(char* path);
+		int32_t updateCPU();
 	private:
-		NES * m_pNes; // TODO figure this out later
+		NES m_Nes; // TODO figure this out later
 		SDL_Surface* m_screen;
+		bool m_romLoaded;
 		int32_t m_screenWidth;
 		int32_t m_screenHeight;
 		RomFile m_rom;
-		void loadRom(char* path);
+		
 };

@@ -13,11 +13,10 @@ int main(int argc, char *argv[]) {
 
 	char * rompath = "rom/Zelda.NES";
 
-	RomFile rom = loadRomFile(rompath);
+	//RomFile rom = loadRomFile(rompath);
 	Emulator emu;
+	emu.loadRom(rompath);
 	emu.run();
-
-	freeRomFile(&rom);
 
 	return 0;
 }
