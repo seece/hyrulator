@@ -66,7 +66,7 @@ Cycle CPU::changeState() {
         case 0x69: ADC(addressImmediate, 2, 2); break;
         case 0x65: ADC(addressZeroPage, 3, 2); break;
         case 0x75: ADC(addressZeroPageX, 4, 2); break;
-        case 0x60: ADC(addressAbsolute, 4, 3); break;
+        case 0x6d: ADC(addressAbsolute, 4, 3); break;
         case 0x7d: ADC(addressAbsoluteX, cyclesAbsoluteX, 3); break;
         case 0x79: ADC(addressAbsoluteY, cyclesAbsoluteY, 3); break;
         case 0x61: ADC(addressIndexedIndirect, 6, 2); break;
@@ -195,6 +195,57 @@ Cycle CPU::changeState() {
         case 0x08: push(mReg.SP); break;
         case 0x68: pull(mReg.A); break;
         case 0x28: pull(mReg.A); break;
+
+        case 0x2a: rotateA(false); break;
+        case 0x26: rotateMemory(addressZeroPage, 5, 2, false); break;
+        case 0x36: rotateMemory(addressZeroPageX, 6, 2, false); break;
+        case 0x2e: rotateMemory(addressAbsolute, 6, 3, false); break;
+        case 0x3e: rotateMemory(addressAbsoluteX, 7, 3, false); break;
+
+        case 0x6a: rotateA(true); break;
+        case 0x66: rotateMemory(addressZeroPage, 5, 2, true); break;
+        case 0x76: rotateMemory(addressZeroPageX, 6, 2, true); break;
+        case 0x6e: rotateMemory(addressAbsolute, 6, 3, true); break;
+        case 0x7e: rotateMemory(addressAbsoluteX, 7, 3, true); break;
+
+        case 0x40: RTI(); break;
+        case 0x60: RTS(); break;
+        
+        case 0xe9: SBC(addressImmediate, 2, 2); break;
+        case 0xe5: SBC(addressZeroPage, 3, 2); break;
+        case 0xf5: SBC(addressZeroPageX, 4, 2); break;
+        case 0xed: SBC(addressAbsolute, 4, 3); break;
+        case 0xfd: SBC(addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0xf9: SBC(addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0xe1: SBC(addressIndexedIndirect, 6, 2); break;
+        case 0xf1: SBC(addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0x38: setFlag(CARRY); mLastInstructionCycles += 2; mReg.PC++; break;
+        case 0xf8: setFlag(DECIMAL_MODE); mLastInstructionCycles += 2; mReg.PC++; break;
+        case 0x78: setFlag(INTERRUPT); mLastInstructionCycles += 2; mReg.PC++; break;
+    
+        case 0x85: storeRegister(mReg.A, addressZeroPage, 3, 2); break;
+        case 0x95: storeRegister(mReg.A, addressZeroPageX, 4, 2); break;
+        case 0x8d: storeRegister(mReg.A, addressAbsolute, 4, 3); break;
+        case 0x9d: storeRegister(mReg.A, addressAbsoluteX, cyclesAbsoluteX, 3); break;
+        case 0x99: storeRegister(mReg.A, addressAbsoluteY, cyclesAbsoluteY, 3); break;
+        case 0x81: storeRegister(mReg.A, addressIndexedIndirect, 6, 2); break;
+        case 0x91: storeRegister(mReg.A, addressPreIndexedIndirect, cyclesPreIndexedIndirect, 2); break;
+
+        case 0x86: storeRegister(mReg.X, addressZeroPage, 3, 2); break;
+        case 0x96: storeRegister(mReg.X, addressZeroPageY, 4, 2); break;
+        case 0x8e: storeRegister(mReg.X, addressAbsolute, 4, 3); break;
+
+        case 0x84: storeRegister(mReg.Y, addressZeroPage, 3, 2); break;
+        case 0x94: storeRegister(mReg.Y, addressZeroPageX, 4, 2); break;
+        case 0x8c: storeRegister(mReg.Y, addressAbsolute, 4, 3); break;
+
+        case 0xaa: transfer(mReg.A, mReg.X); break;
+        case 0xa8: transfer(mReg.A, mReg.Y); break;
+        case 0xba: transfer(mReg.SP, mReg.X); break;
+        case 0x8a: transfer(mReg.X, mReg.A); break;
+        case 0x9a: transfer(mReg.X, mReg.SP); break;
+        case 0x98: transfer(mReg.Y, mReg.A); break;
         default:
             std::cout << static_cast<int32_t>(opcode)
                 << " is not a legal opcode."
@@ -314,10 +365,11 @@ void CPU::JMP(uint8_t address, uint8_t cycles) {
     mLastInstructionCycles = cycles;   
 }
 
+//probably wont work
 void CPU::JSR(uint8_t operand1, uint8_t operand2) {
     mReg.SP -= 2;
-    mMem.write(0x0100+mReg.SP + 1, operand1);
-    mMem.write(0x0100+mReg.SP + 2, operand2);
+    mMem.write(0x0100+mReg.SP + 1, mReg.PC & 0x00ff);
+    mMem.write(0x0100+mReg.SP + 2, operand2 & 0xff00);
     mReg.PC = operand1 + operand2*0x100;
     mLastInstructionCycles = 3;   
 }
@@ -370,6 +422,77 @@ void CPU::pull(uint8_t& reg) {
     reg = mMem.readb(0x0100 + mReg.SP);
     mLastInstructionCycles = 4;
     mReg.PC += 1;
+}
+
+void CPU::rotateA(bool dir) {
+    if(dir) {
+        setFlag(STATUS(SIGN|CARRY), mReg.A & 0x01);
+        mReg.A = (mReg.A << 7)|(mReg.A >> 1);
+    } else {
+        setFlag(CARRY, mReg.A & 0x08);
+        setFlag(SIGN, mReg.A & 0x06);
+        mReg.A = (mReg.A >> 7)|(mReg.A << 1);
+    }
+    setFlag(ZERO, !mReg.A);
+    mLastInstructionCycles = 2;
+    mReg.PC++;
+}
+
+void CPU::rotateMemory(uint8_t address, uint8_t cycles, uint8_t increment, bool dir) {
+    uint8_t mem_val = mMem.readb(address);
+    if(dir) {
+        setFlag(STATUS(SIGN|CARRY), mem_val & 0x01);
+        mem_val = (mReg.A << 7)|(mReg.A >> 1);
+    } else {
+        setFlag(CARRY, mem_val & 0x08);
+        setFlag(SIGN, mem_val & 0x06);
+        mem_val = (mReg.A >> 7)|(mReg.A << 1);
+    }
+    setFlag(ZERO, !mem_val);
+    mMem.write(address, mem_val);
+    mLastInstructionCycles = cycles;
+    mReg.PC += increment;
+}
+//fix
+void CPU::RTI() {
+    mReg.S = mMem.readb(0x0100 + mReg.SP + 1); 
+    mReg.PC = (((uint16_t)mMem.readb(0x0100 + mReg.SP + 3) << 8)|mMem.readb(0x0100 + mReg.SP + 2)) + 1; 
+    mReg.SP += 3;
+    mLastInstructionCycles = 6;
+       
+}
+//fix
+void CPU::RTS() {
+    mReg.PC = (((uint16_t)mMem.readb(0x0100 + mReg.SP + 1) << 8)|mMem.readb(0x0100 + mReg.SP + 2)) + 1; 
+    mReg.SP += 2;
+    mLastInstructionCycles = 6;
+    mReg.PC += 3;
+}
+
+void CPU::SBC(uint8_t address, uint8_t  cycles, uint8_t increment) {
+    uint8_t mem_value = mMem.readb(address);
+    uint16_t sum = mReg.A - mem_value - !getFlag(CARRY);
+    setFlag(CARRY, sum > 0xff);
+    setOverflow(mReg.A, mem_value, sum);
+    setFlag(ZERO, !sum);
+    setFlag(SIGN, sum & 0x80); 
+    mLastInstructionCycles = cycles;
+    mReg.A = sum;
+    mReg.PC += increment;
+}
+
+void CPU::storeRegister(uint8_t reg, uint8_t address, uint8_t cycles, uint8_t increment) {
+    mMem.write(address, reg);
+    mReg.PC += increment;
+    mLastInstructionCycles = cycles;
+}
+
+void CPU::transfer(uint8_t from, uint8_t& to) {
+    setFlag(ZERO, !from);
+    setFlag(SIGN, from & 0x80);
+    to = from;
+    mReg.PC++;
+    mLastInstructionCycles = 2;
 }
 
 void CPU::resetInterrupt(void) {

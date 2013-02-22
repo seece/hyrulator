@@ -61,6 +61,13 @@ class CPU {
         void ORA(uint8_t address, uint8_t cycles, uint8_t increment);
         void push(uint8_t reg);
         void pull(uint8_t& reg);
+        void rotateA(bool dir);
+        void rotateMemory(uint8_t address, uint8_t cycles, uint8_t increment, bool dir);
+        void RTI();
+        void RTS();
+        void SBC(uint8_t address, uint8_t cycles, uint8_t increment);
+        void storeRegister(uint8_t reg, uint8_t address, uint8_t cycles, uint8_t increment);
+        void transfer(uint8_t from, uint8_t& to); 
         //bit
 		friend class Debugger;
 	private:
