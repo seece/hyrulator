@@ -8,6 +8,7 @@
 
 class NES {
 	public:
+		NES() {};
 		NES(const RomFile* rom);
 		void restart();
 		int32_t runCycle(void);

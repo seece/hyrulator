@@ -20,7 +20,7 @@ static void readFlags(RomFile * romp, uint8_t flags1, uint8_t flags2) {
 
 }
 
-void freeRom(RomFile* romp) {
+void freeRomFile(RomFile* romp) {
 	delete romp->romData;	
 	delete romp->vromData;	
 }
@@ -28,7 +28,7 @@ void freeRom(RomFile* romp) {
 // Loads a rom to the emulator memory.
 // returns NULL on failure
 // based on http://fms.komkon.org/EMUL8/NES.html#LABM
-RomFile loadRom(char * filepath) {
+RomFile loadRomFile(char * filepath) {
 	RomFile rom;
 
 	std::ifstream input (filepath, std::ifstream::in);
