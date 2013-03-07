@@ -2,9 +2,11 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <sstream>
 #include <cstring>
 #include "debugger.hpp"
 #include "NES/nes.hpp"
+#include "NES/cpu.hpp"
 
 using std::cout;
 using std::cerr;
@@ -13,6 +15,7 @@ using std::setfill;
 using std::setw;
 using std::hex;
 using std::string;
+using std::stringstream;
 
 const int columnSize = 8;
 
@@ -25,6 +28,21 @@ Debugger::Debugger() {
 
 void Debugger::attachNes(NES* nes_pointer) {
 	nes = nes_pointer;
+}
+
+std::string Debugger::getRegisterState() {
+	Registers reg = nes->cpu.mReg;
+	stringstream stream;
+	stream << setfill(' ') << hex;
+	stream << "A: " 	<< setw(2) << static_cast<int32_t>(reg.A);
+	stream << " X: " 	<< setw(2) << static_cast<int32_t>(reg.X);
+	stream << " Y: " 	<< setw(2) << static_cast<int32_t>(reg.Y);
+	stream << " S: " 	<< setw(2) << static_cast<int32_t>(reg.S);
+	stream << " SP: " 	<< setw(2) << static_cast<int32_t>(reg.SP);
+	stream << " PC: " 	<< setw(4) << static_cast<int32_t>(reg.PC);
+	string s = stream.str();
+
+	return s;
 }
 
 void Debugger::printRomDump(uint32_t begin, uint32_t end) {

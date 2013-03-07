@@ -18,7 +18,7 @@ class Emulator {
 		int32_t updateCPU();
 	private:
 		void renderDebugView();
-		void drawText(int32_t x, int32_t y, char * message);
+		void drawText(int32_t x, int32_t y, const char * message);
 		void render();
 		bool update();
 

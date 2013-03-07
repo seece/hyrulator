@@ -55,8 +55,6 @@ int32_t Emulator::updateCPU() {
 
 
 int32_t Emulator::run() {
-	updateCPU();
-
 	bool quit=false;
 
 	while(quit==false) {
@@ -75,6 +73,8 @@ void Emulator::loadRom(char* path) {
 
 // return true to quit
 bool Emulator::update() {
+	updateCPU();
+
 	SDL_Event event;
 
 	while(SDL_PollEvent(&event)) {
@@ -109,10 +109,18 @@ void Emulator::render() {
 }
 
 void Emulator::renderDebugView() {
-	drawText(10, 10, "debug view");
+	int32_t baseline = 0;
+	int32_t margin = 5;
+	int32_t fontheight = 15;
+
+	drawText(margin, baseline, "debug view");
+	baseline+=fontheight;
+	std::string s;
+	s = m_debugger.getRegisterState();
+	drawText(margin, baseline, s.c_str());
 }
 
-void Emulator::drawText(int32_t x, int32_t y, char * message) {
+void Emulator::drawText(int32_t x, int32_t y, const char * message) {
 	SDL_Color white = {255, 255, 255};
 	SDL_Surface * text = TTF_RenderText_Shaded(m_font, message, white, m_bgColor);
 	SDL_Rect rect = {x, y, text->w, text->h};
