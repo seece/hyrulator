@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-c -g -Wall -pedantic -O2
-LDFLAGS=-lstdc++ -lSDL
+LDFLAGS=-lstdc++ -lSDL -lSDL_ttf
 VPATH=src 
 SOURCES=$(wildcard *.cpp)
 ALL_SOURCES=$(wildcard ../*.cpp) $(wildcard ../NES/*.cpp)
