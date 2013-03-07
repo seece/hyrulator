@@ -4,13 +4,15 @@
 
 namespace codec {
     typedef int32_t Cycle;
-    enum Opcode{ADC, AND, ASL, BCC, BCS, BIT, DEX, JMP, JMP_INDIRECT, PLA, PLP, ROL, ROR,
+    
+    enum Opcode{ADC, AND, ASL, BCC, BCS, BPL, BMI, BVC, BVS, BNE, BEQ, BIT, DEX, JMP, JMP_INDIRECT, PLA, PLP, ROL, ROR,
                     CPX, CPY, ORA, EOR, RTI, RTS, SBC, SEC, SED, SEI, STA, STX, STY, TAX,
-                    LDA, CMP, LSR, LDX, LDY, DEC, INC, TAY, TSX, TXA, TXS, TYA, NOP, UNDEFINED_OPCODE};
+                    LDA, CMP, LSR, LDX, LDY, DEC, INC, TAY, TSX, TXA, TXS, TYA, NOP, UNDEFINED_OPCODE,
+                    PHP, CLC, PHA, CLI, DEY, CLV, INY, CLD, INX, BRK, JSR};
 
     enum AddressingMode {A, IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, ZERO_PAGE_Y,
                     ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y, INDEXED_INDIRECT,
-                    PREINDEXED_INDIRECT, ACCUMULATOR, EMPTY, UNDEFINED_MODE};
+                    PREINDEXED_INDIRECT, ACCUMULATOR, RELATIVE, SINGLE_BYTE, UNDEFINED_MODE};
     
     struct Instruction {
         Instruction(Opcode a, AddressingMode b, uint8_t c) : opcode(a), addressingMode(b), length(c) {};
@@ -19,6 +21,7 @@ namespace codec {
         uint8_t length;
     };
 
+    //tables for determining what to do
     const Opcode OPCODE[3][8] = {{UNDEFINED_OPCODE, BIT, JMP, JMP_INDIRECT, STY, LDY, CPY, CPX},
                                 {ORA, AND, EOR, ADC, STA, LDA, CMP, SBC},
                                 {ASL, ROL, LSR, ROR, STX, LDX, DEC, INC}};
@@ -28,6 +31,14 @@ namespace codec {
     const uint8_t LENGTH[3][8] = {{2, 2, 0, 3, 0, 2, 0, 3},
                                     {3, 2, 2, 3, 2, 2, 3, 3},
                                     {2, 2, 0, 1, 3, 0, 2, 3}};
+    const Opcode JUMPS[16] = {UNDEFINED_OPCODE, BPL, UNDEFINED_OPCODE, BMI, UNDEFINED_OPCODE, BVC, UNDEFINED_OPCODE, BCS, UNDEFINED_OPCODE, BCC, UNDEFINED_OPCODE, BCS, UNDEFINED_OPCODE, BNE, UNDEFINED_OPCODE, BEQ};
+
+    const Opcode SINGLE_BYTES[16] = {PHP, CLC, PLP, SEC, PHA, CLI, PLA, SEI, DEY, TYA, TAY, CLV, INY, CLD, INX, SED};
+
+    const Opcode SINGLE_BYTES2[7] = {TXA, TXS, TAX, TSX,  DEX, NOP};
+
+    const Opcode LEFTOVER[7] = {BRK, UNDEFINED_OPCODE, JSR, UNDEFINED_OPCODE, RTI, UNDEFINED_OPCODE, RTS};
+
     Instruction decode(uint8_t instruction) {
         uint8_t op1 = (instruction & 0b11100000) >> 5;
         uint8_t op2 = instruction & 0b00000011;
@@ -35,6 +46,26 @@ namespace codec {
         Opcode opcode = OPCODE[op2][op1];
         AddressingMode amode = ADDRESSING_MODE[op2][add];
         uint8_t length = LENGTH[op2][add];
+        if((instruction << 3) == 0b10000000) {
+            opcode = JUMPS[instruction << 4];
+            amode = RELATIVE;
+            length = 2; 
+        }
+        if((instruction & 0x0f) == 8) {
+            opcode = SINGLE_BYTES[instruction << 4];
+            amode = SINGLE_BYTE;
+            length = 1;
+        }
+        if((instruction & 0x0f) == 0xa && (instruction << 4) > 0x7 && (instruction << 4) < 0xf && (instruction << 4) != 0xd) {
+            opcode = SINGLE_BYTES2[(instruction << 4) - 8];
+            amode = SINGLE_BYTE;
+            length = 1;
+        }
+        if(!(instruction & 0x0f) && !((instruction << 4) % 2) && (instruction << 4) <= 6) {
+            opcode = LEFTOVER[instruction << 4];
+            amode = (opcode == JSR) ? ABSOLUTE : SINGLE_BYTE; 
+            length = (opcode == JSR) ? 3 : 1; 
+        }
         return Instruction(opcode, amode, length);
     } 
 }
