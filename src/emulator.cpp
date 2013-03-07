@@ -26,7 +26,8 @@ Emulator::Emulator() {
 		exit(1);
 	}
 
-	m_font = TTF_OpenFont("data/FreeMono.ttf", 12);
+	m_bgColor = {20, 20, 30};
+	m_font = TTF_OpenFont("data/FreeMono.ttf", 14);
 
 	if (m_font == NULL) {
 		cerr << "Couldn't load font!" << endl;
@@ -88,8 +89,10 @@ bool Emulator::update() {
 
 void Emulator::render() {
 	SDL_Rect screensize= {0, 0, m_screen->w, m_screen->h};
-	Uint32 bgColor = SDL_MapRGB(m_screen->format, 25,25,30);
-	SDL_FillRect(m_screen, &screensize, bgColor);
+	Uint32 bgcol = SDL_MapRGB(m_screen->format, 
+		m_bgColor.r, m_bgColor.g, m_bgColor.b);
+	SDL_FillRect(m_screen, &screensize, bgcol);
+
 	this->renderDebugView();
 	if (SDL_Flip(m_screen)) {
 		cerr << "SDL error!" << endl;
@@ -99,7 +102,7 @@ void Emulator::render() {
 
 void Emulator::renderDebugView() {
 	SDL_Color white = {255, 255, 255};
-	SDL_Surface * text = TTF_RenderText_Solid(m_font, "this is a test", white);
+	SDL_Surface * text = TTF_RenderText_Shaded(m_font, "this is a test", white, m_bgColor);
 
 	SDL_Rect rect = {10, 10, text->w, text->h};
 	SDL_BlitSurface(text, NULL, m_screen, &rect);

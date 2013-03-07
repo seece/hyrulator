@@ -21,6 +21,7 @@ class Emulator {
 		bool update();
 		NES m_Nes; // TODO figure this out later
 		SDL_Surface* m_screen;
+		SDL_Color m_bgColor;
 		TTF_Font* m_font;
 		bool m_romLoaded;
 		int32_t m_screenWidth;
