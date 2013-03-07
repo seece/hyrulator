@@ -26,7 +26,7 @@ Emulator::Emulator() {
 		exit(1);
 	}
 
-	m_bgColor = {20, 20, 30};
+	m_bgColor = {20, 20, 30, 0};
 	m_font = TTF_OpenFont("data/FreeMono.ttf", 14);
 
 	if (m_font == NULL) {
@@ -70,6 +70,7 @@ void Emulator::loadRom(char* path) {
 	m_rom = loadRomFile(path);
 	m_Nes = NES(&m_rom);
 	m_romLoaded = true;
+	m_debugger.attachNes(&m_Nes);
 }
 
 // return true to quit
@@ -77,6 +78,13 @@ bool Emulator::update() {
 	SDL_Event event;
 
 	while(SDL_PollEvent(&event)) {
+		if (event.type == SDL_KEYDOWN) {
+			if (event.key.keysym.sym == SDLK_ESCAPE) {
+				return true;
+			}
+
+		}
+
 		if (event.type == SDL_QUIT) {
 			return true;
 		}
@@ -101,11 +109,13 @@ void Emulator::render() {
 }
 
 void Emulator::renderDebugView() {
-	SDL_Color white = {255, 255, 255};
-	SDL_Surface * text = TTF_RenderText_Shaded(m_font, "this is a test", white, m_bgColor);
+	drawText(10, 10, "debug view");
+}
 
-	SDL_Rect rect = {10, 10, text->w, text->h};
+void Emulator::drawText(int32_t x, int32_t y, char * message) {
+	SDL_Color white = {255, 255, 255};
+	SDL_Surface * text = TTF_RenderText_Shaded(m_font, message, white, m_bgColor);
+	SDL_Rect rect = {x, y, text->w, text->h};
 	SDL_BlitSurface(text, NULL, m_screen, &rect);
 	SDL_FreeSurface(text);
 }
-
